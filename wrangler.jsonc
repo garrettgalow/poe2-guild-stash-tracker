@@ -1,0 +1,21 @@
+{
+  "name": "poe2-stash-analytics",
+  "main": "src/worker.ts",
+  "compatibility_date": "2025-03-07",
+  "compatibility_flags": ["nodejs_compat"],
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "poe2-stash-db",
+      "database_id": "7e54e8c8-c7d9-426e-9c08-5dc0822fd20b"
+    }
+  ],
+  "assets": {
+    "binding": "ASSETS",
+    "directory": "dist"
+  },
+  "observability": {
+    "enabled": true,
+    "head_sampling_rate": 1
+  }
+}

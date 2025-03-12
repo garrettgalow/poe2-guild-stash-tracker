@@ -1,0 +1,26 @@
+{
+  "dependencies": {
+    "chart.js": "^4.4.8",
+    "csv-parse": "^5.6.0",
+    "hono": "^4.7.4",
+    "react": "^19.0.0",
+    "react-chartjs-2": "^5.3.0",
+    "react-dom": "^19.0.0",
+    "react-dropzone": "^14.3.8",
+    "react-router-dom": "^7.3.0"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20250311.0",
+    "@types/react": "^19.0.10",
+    "@types/react-dom": "^19.0.4",
+    "@vitejs/plugin-react": "^4.3.4",
+    "typescript": "^5.8.2",
+    "vite": "^6.2.1",
+    "wrangler": "^3.114.1"
+  },
+  "scripts": {
+    "dev": "vite",
+    "build": "rm -rf dist && vite build",
+    "deploy": "npm run build && wrangler deploy"
+  }
+}
