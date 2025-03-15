@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { ArrowDownIcon, ArrowUpIcon, ChevronDown, TrendingDownIcon, TrendingUpIcon } from "lucide-react"
 import {
   Area,
@@ -18,6 +18,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../..
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../components/ui/select"
 import { FileUpload } from '../../components/FileUpload'
 import { TimeSeriesChart } from '../../components/TimeSeriesChart'
+import { useTopUsers } from "../../hooks/use-top-users"
+import { Skeleton } from "../../components/ui/skeleton"
+import { useUserRatios } from "../../hooks/use-user-ratios"
 
 // Sample data for charts
 const activityData = [
@@ -93,233 +96,306 @@ const popularItems = [
 export default function DashboardPage() {
   const [timeRange, setTimeRange] = useState("7d")
   const [timeSlice, setTimeSlice] = useState("day")
+  
+  // Fetch data for all cards
+  const { 
+    data: topAddersData, 
+    loading: topAddersLoading, 
+    error: topAddersError 
+  } = useTopUsers("added", timeRange)
+  
+  const { 
+    data: topRemoversData, 
+    loading: topRemoversLoading, 
+    error: topRemoversError 
+  } = useTopUsers("removed", timeRange)
+  
+  const {
+    data: userRatiosData,
+    loading: userRatiosLoading,
+    error: userRatiosError
+  } = useUserRatios(timeRange)
+  
+  // Derived data for best and worst ratios
+  const bestRatios = userRatiosData ? [...userRatiosData].sort((a, b) => b.ratio - a.ratio) : []
+  const worstRatios = userRatiosData ? [...userRatiosData].sort((a, b) => a.ratio - b.ratio) : []
 
-//   return (
-//     <div className="container mx-auto p-4">
-//       <h1 className="text-2xl font-bold mb-4">PoE2 Stash Analytics</h1>
-//       <FileUpload />
-//       <div className="mt-8">
-//         <TimeSeriesChart />
-//       </div>
-//     </div>
-//   )
-// }
+  return (
+    <>
+      <div className="flex items-center gap-4 mb-6">
+        <Select value={timeRange} onValueChange={setTimeRange}>
+          <SelectTrigger className="w-[180px]">
+            <SelectValue placeholder="Select time range" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="24h">Last 24 Hours</SelectItem>
+            <SelectItem value="7d">Last 7 Days</SelectItem>
+            <SelectItem value="30d">Last 30 Days</SelectItem>
+            <SelectItem value="90d">Last 90 Days</SelectItem>
+          </SelectContent>
+        </Select>
+        <Select value={timeSlice} onValueChange={setTimeSlice}>
+          <SelectTrigger className="w-[180px]">
+            <SelectValue placeholder="Time slice" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="hour">Hour</SelectItem>
+            <SelectItem value="day">Day</SelectItem>
+            <SelectItem value="week">Week</SelectItem>
+            <SelectItem value="month">Month</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
 
-return (
-  <>
-    <div className="flex items-center gap-4 mb-6">
-      <Select value={timeRange} onValueChange={setTimeRange}>
-        <SelectTrigger className="w-[180px]">
-          <SelectValue placeholder="Select time range" />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectItem value="24h">Last 24 Hours</SelectItem>
-          <SelectItem value="7d">Last 7 Days</SelectItem>
-          <SelectItem value="30d">Last 30 Days</SelectItem>
-          <SelectItem value="90d">Last 90 Days</SelectItem>
-        </SelectContent>
-      </Select>
-      <Select value={timeSlice} onValueChange={setTimeSlice}>
-        <SelectTrigger className="w-[180px]">
-          <SelectValue placeholder="Time slice" />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectItem value="hour">Hour</SelectItem>
-          <SelectItem value="day">Day</SelectItem>
-          <SelectItem value="week">Week</SelectItem>
-          <SelectItem value="month">Month</SelectItem>
-        </SelectContent>
-      </Select>
-    </div>
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className="text-sm font-medium">Top Adders</CardTitle>
+            <ArrowUpIcon className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-2">
+              {topAddersLoading ? (
+                // Show loading skeletons
+                <>
+                  <Skeleton className="h-5 w-full" />
+                  <Skeleton className="h-5 w-full" />
+                  <Skeleton className="h-5 w-full" />
+                  <Skeleton className="h-5 w-full" />
+                  <Skeleton className="h-5 w-full" />
+                </>
+              ) : topAddersError ? (
+                // Show error message
+                <div className="text-sm text-red-500">Error loading data</div>
+              ) : topAddersData.length === 0 ? (
+                // Show empty state
+                <div className="text-sm text-muted-foreground">No data available</div>
+              ) : (
+                // Show actual data
+                topAddersData.slice(0, 5).map((user, index) => (
+                  <div key={index} className="flex items-center justify-between">
+                    <span className="text-sm">{user.user}</span>
+                    <span className="font-medium">{user.count}</span>
+                  </div>
+                ))
+              )}
+            </div>
+          </CardContent>
+        </Card>
 
-    <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between pb-2">
-          <CardTitle className="text-sm font-medium">Top Adders</CardTitle>
-          <ArrowUpIcon className="h-4 w-4 text-muted-foreground" />
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-2">
-            {topUsers.adders.slice(0, 3).map((user, index) => (
-              <div key={index} className="flex items-center justify-between">
-                <span className="text-sm">{user.account}</span>
-                <span className="font-medium">{user.count}</span>
-              </div>
-            ))}
-            <Button variant="ghost" size="sm" className="w-full mt-2 text-xs">
-              View All <ChevronDown className="ml-1 h-3 w-3" />
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className="text-sm font-medium">Top Removers</CardTitle>
+            <ArrowDownIcon className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-2">
+              {topRemoversLoading ? (
+                // Show loading skeletons
+                <>
+                  <Skeleton className="h-5 w-full" />
+                  <Skeleton className="h-5 w-full" />
+                  <Skeleton className="h-5 w-full" />
+                  <Skeleton className="h-5 w-full" />
+                  <Skeleton className="h-5 w-full" />
+                </>
+              ) : topRemoversError ? (
+                // Show error message
+                <div className="text-sm text-red-500">Error loading data</div>
+              ) : topRemoversData.length === 0 ? (
+                // Show empty state
+                <div className="text-sm text-muted-foreground">No data available</div>
+              ) : (
+                // Show actual data
+                topRemoversData.slice(0, 5).map((user, index) => (
+                  <div key={index} className="flex items-center justify-between">
+                    <span className="text-sm">{user.user}</span>
+                    <span className="font-medium">{user.count}</span>
+                  </div>
+                ))
+              )}
+            </div>
+          </CardContent>
+        </Card>
 
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between pb-2">
-          <CardTitle className="text-sm font-medium">Top Removers</CardTitle>
-          <ArrowDownIcon className="h-4 w-4 text-muted-foreground" />
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-2">
-            {topUsers.removers.slice(0, 3).map((user, index) => (
-              <div key={index} className="flex items-center justify-between">
-                <span className="text-sm">{user.account}</span>
-                <span className="font-medium">{user.count}</span>
-              </div>
-            ))}
-            <Button variant="ghost" size="sm" className="w-full mt-2 text-xs">
-              View All <ChevronDown className="ml-1 h-3 w-3" />
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className="text-sm font-medium">Best Ratios</CardTitle>
+            <TrendingUpIcon className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-2">
+              {userRatiosLoading ? (
+                // Show loading skeletons
+                <>
+                  <Skeleton className="h-5 w-full" />
+                  <Skeleton className="h-5 w-full" />
+                  <Skeleton className="h-5 w-full" />
+                  <Skeleton className="h-5 w-full" />
+                  <Skeleton className="h-5 w-full" />
+                </>
+              ) : userRatiosError ? (
+                // Show error message
+                <div className="text-sm text-red-500">Error loading data</div>
+              ) : bestRatios.length === 0 ? (
+                // Show empty state
+                <div className="text-sm text-muted-foreground">No data available</div>
+              ) : (
+                // Show actual data
+                bestRatios.slice(0, 5).map((user, index) => (
+                  <div key={index} className="flex items-center justify-between">
+                    <span className="text-sm">{user.user}</span>
+                    <span className="font-medium">{user.ratio.toFixed(1)}</span>
+                  </div>
+                ))
+              )}
+            </div>
+          </CardContent>
+        </Card>
 
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between pb-2">
-          <CardTitle className="text-sm font-medium">Best Ratios</CardTitle>
-          <TrendingUpIcon className="h-4 w-4 text-muted-foreground" />
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-2">
-            {topUsers.bestRatios.slice(0, 3).map((user, index) => (
-              <div key={index} className="flex items-center justify-between">
-                <span className="text-sm">{user.account}</span>
-                <span className="font-medium">{user.ratio.toFixed(1)}</span>
-              </div>
-            ))}
-            <Button variant="ghost" size="sm" className="w-full mt-2 text-xs">
-              View All <ChevronDown className="ml-1 h-3 w-3" />
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className="text-sm font-medium">Worst Ratios</CardTitle>
+            <TrendingDownIcon className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-2">
+              {userRatiosLoading ? (
+                // Show loading skeletons
+                <>
+                  <Skeleton className="h-5 w-full" />
+                  <Skeleton className="h-5 w-full" />
+                  <Skeleton className="h-5 w-full" />
+                  <Skeleton className="h-5 w-full" />
+                  <Skeleton className="h-5 w-full" />
+                </>
+              ) : userRatiosError ? (
+                // Show error message
+                <div className="text-sm text-red-500">Error loading data</div>
+              ) : worstRatios.length === 0 ? (
+                // Show empty state
+                <div className="text-sm text-muted-foreground">No data available</div>
+              ) : (
+                // Show actual data
+                worstRatios.slice(0, 5).map((user, index) => (
+                  <div key={index} className="flex items-center justify-between">
+                    <span className="text-sm">{user.user}</span>
+                    <span className="font-medium">{user.ratio.toFixed(1)}</span>
+                  </div>
+                ))
+              )}
+            </div>
+          </CardContent>
+        </Card>
+      </div>
 
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between pb-2">
-          <CardTitle className="text-sm font-medium">Worst Ratios</CardTitle>
-          <TrendingDownIcon className="h-4 w-4 text-muted-foreground" />
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-2">
-            {topUsers.worstRatios.slice(0, 3).map((user, index) => (
-              <div key={index} className="flex items-center justify-between">
-                <span className="text-sm">{user.account}</span>
-                <span className="font-medium">{user.ratio.toFixed(1)}</span>
-              </div>
-            ))}
-            <Button variant="ghost" size="sm" className="w-full mt-2 text-xs">
-              View All <ChevronDown className="ml-1 h-3 w-3" />
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
-    </div>
+      <div className="mt-6 grid gap-6 md:grid-cols-2">
+        <Card className="col-span-1 md:col-span-2">
+          <CardHeader>
+            <CardTitle>Stash Activity</CardTitle>
+            <CardDescription>Items added and removed over time</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="h-[300px]">
+              <ResponsiveContainer width="100%" height="100%">
+                <AreaChart
+                  data={activityData}
+                  margin={{
+                    top: 5,
+                    right: 30,
+                    left: 20,
+                    bottom: 5,
+                  }}
+                >
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="time" />
+                  <YAxis />
+                  <Tooltip />
+                  <Legend />
+                  <Area
+                    type="monotone"
+                    dataKey="added"
+                    stackId="1"
+                    stroke="#10b981"
+                    fill="#10b981"
+                    fillOpacity={0.6}
+                    name="Items Added"
+                  />
+                  <Area
+                    type="monotone"
+                    dataKey="removed"
+                    stackId="1"
+                    stroke="#ef4444"
+                    fill="#ef4444"
+                    fillOpacity={0.6}
+                    name="Items Removed"
+                  />
+                </AreaChart>
+              </ResponsiveContainer>
+            </div>
+          </CardContent>
+        </Card>
 
-    <div className="mt-6 grid gap-6 md:grid-cols-2">
-      <Card className="col-span-1 md:col-span-2">
-        <CardHeader>
-          <CardTitle>Stash Activity</CardTitle>
-          <CardDescription>Items added and removed over time</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="h-[300px]">
-            <ResponsiveContainer width="100%" height="100%">
-              <AreaChart
-                data={activityData}
-                margin={{
-                  top: 5,
-                  right: 30,
-                  left: 20,
-                  bottom: 5,
-                }}
-              >
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="time" />
-                <YAxis />
-                <Tooltip />
-                <Legend />
-                <Area
-                  type="monotone"
-                  dataKey="added"
-                  stackId="1"
-                  stroke="#10b981"
-                  fill="#10b981"
-                  fillOpacity={0.6}
-                  name="Items Added"
-                />
-                <Area
-                  type="monotone"
-                  dataKey="removed"
-                  stackId="1"
-                  stroke="#ef4444"
-                  fill="#ef4444"
-                  fillOpacity={0.6}
-                  name="Items Removed"
-                />
-              </AreaChart>
-            </ResponsiveContainer>
-          </div>
-        </CardContent>
-      </Card>
+        <Card>
+          <CardHeader>
+            <CardTitle>Most Popular Items</CardTitle>
+            <CardDescription>Based on unique users</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="h-[300px]">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart
+                  data={popularItems}
+                  layout="vertical"
+                  margin={{
+                    top: 5,
+                    right: 30,
+                    left: 20,
+                    bottom: 5,
+                  }}
+                >
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis type="number" />
+                  <YAxis dataKey="item" type="category" width={100} />
+                  <Tooltip />
+                  <Legend />
+                  <Bar dataKey="users" fill="#6366f1" name="Unique Users" />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          </CardContent>
+        </Card>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Most Popular Items</CardTitle>
-          <CardDescription>Based on unique users</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="h-[300px]">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart
-                data={popularItems}
-                layout="vertical"
-                margin={{
-                  top: 5,
-                  right: 30,
-                  left: 20,
-                  bottom: 5,
-                }}
-              >
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis type="number" />
-                <YAxis dataKey="item" type="category" width={100} />
-                <Tooltip />
-                <Legend />
-                <Bar dataKey="users" fill="#6366f1" name="Unique Users" />
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>Total Currency Withdrawn</CardTitle>
-          <CardDescription>Most withdrawn currency types</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="h-[300px]">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart
-                data={currencyData}
-                layout="vertical"
-                margin={{
-                  top: 5,
-                  right: 30,
-                  left: 20,
-                  bottom: 5,
-                }}
-              >
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis type="number" />
-                <YAxis dataKey="name" type="category" width={100} />
-                <Tooltip />
-                <Legend />
-                <Bar dataKey="amount" fill="#f59e0b" name="Amount" />
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-        </CardContent>
-      </Card>
-    </div>
-  </>
-) }
+        <Card>
+          <CardHeader>
+            <CardTitle>Total Currency Withdrawn</CardTitle>
+            <CardDescription>Most withdrawn currency types</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="h-[300px]">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart
+                  data={currencyData}
+                  layout="vertical"
+                  margin={{
+                    top: 5,
+                    right: 30,
+                    left: 20,
+                    bottom: 5,
+                  }}
+                >
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis type="number" />
+                  <YAxis dataKey="name" type="category" width={100} />
+                  <Tooltip />
+                  <Legend />
+                  <Bar dataKey="amount" fill="#f59e0b" name="Amount" />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    </>
+  )
+}

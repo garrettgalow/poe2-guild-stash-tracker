@@ -108,3 +108,52 @@ export async function getItemsByHour(
     // .bind(minutes)
     .all();
 }
+
+export async function getUserRatios(
+  db: D1Database,
+  timeRange?: string,
+  limit = 10
+) {
+  let timeFilter = '';
+  
+  if (timeRange) {
+    switch (timeRange) {
+      case '24h':
+        timeFilter = "WHERE date > datetime('now', '-1 day')";
+        break;
+      case '7d':
+        timeFilter = "WHERE date > datetime('now', '-7 days')";
+        break;
+      case '30d':
+        timeFilter = "WHERE date > datetime('now', '-30 days')";
+        break;
+      case '90d':
+        timeFilter = "WHERE date > datetime('now', '-90 days')";
+        break;
+    }
+  }
+
+  return db
+    .prepare(`
+      WITH user_actions AS (
+        SELECT 
+          account,
+          SUM(CASE WHEN action = 'added' THEN 1 ELSE 0 END) as additions,
+          SUM(CASE WHEN action = 'removed' THEN 1 ELSE 0 END) as removals
+        FROM stash_events
+        ${timeFilter ? timeFilter : ''}
+        GROUP BY account
+        HAVING additions > 0 AND removals > 0
+      )
+      SELECT 
+        account as user, 
+        additions, 
+        removals,
+        CAST(additions AS REAL) / CAST(removals AS REAL) as ratio
+      FROM user_actions
+      ORDER BY ratio DESC
+      LIMIT ?
+    `)
+    .bind(limit)
+    .all();
+}

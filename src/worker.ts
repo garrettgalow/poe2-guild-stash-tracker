@@ -1,7 +1,7 @@
 import { Hono } from 'hono';
 import { parse } from 'csv-parse/sync';
 import { Env } from './lib/types';
-import { insertEvents, getTopUsers, getItemsByHour, getTableData } from './lib/db';
+import { insertEvents, getTopUsers, getItemsByHour, getTableData, getUserRatios } from './lib/db';
 import { StashEvent } from './lib/types';
 
 const app = new Hono<{ Bindings: Env }>();
@@ -193,6 +193,26 @@ app.get('/api/stash-data', async (c) => {
     success: true,
     data: results.results
   });
+});
+
+app.get('/api/charts/user-ratios', async (c) => {
+  const timeRange = c.req.query('timeRange') || '7d';
+  const limit = Number(c.req.query('limit')) || 10;
+  
+  try {
+    const result = await getUserRatios(c.env.DB, timeRange as string, limit);
+    
+    return c.json({
+      success: true,
+      data: result.results
+    });
+  } catch (error) {
+    console.error('Error fetching user ratios:', error);
+    return c.json({ 
+      success: false, 
+      error: 'Failed to fetch user ratios data' 
+    }, 500);
+  }
 });
 
 // Serve static files for all other routes
