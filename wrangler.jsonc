@@ -7,7 +7,8 @@
     {
       "binding": "DB",
       "database_name": "poe2-stash-db",
-      "database_id": "7e54e8c8-c7d9-426e-9c08-5dc0822fd20b"
+      "database_id": "7e54e8c8-c7d9-426e-9c08-5dc0822fd20b",
+      "preview_database_id": "local-poe2-stash-db"
     }
   ],
   "assets": {
