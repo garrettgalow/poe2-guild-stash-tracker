@@ -77,6 +77,7 @@ export default function SearchPage() {
 
   return (
     <>
+    <h1>Filtering Coming Soon!</h1>
       <Card className="mb-6">
         <CardHeader>
           <CardTitle>Filter Data</CardTitle>

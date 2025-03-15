@@ -157,3 +157,59 @@ export async function getUserRatios(
     .bind(limit)
     .all();
 }
+
+export async function getActivityByTimeSegment(
+  db: D1Database,
+  timeRange: string,
+  timeSlice: string
+) {
+  let timeFilter = '';
+  let groupFormat = '';
+  
+  // Set time filter based on selected range
+  switch (timeRange) {
+    case '24h':
+      timeFilter = "WHERE date > datetime('now', '-1 day')";
+      break;
+    case '7d':
+      timeFilter = "WHERE date > datetime('now', '-7 days')";
+      break;
+    case '30d':
+      timeFilter = "WHERE date > datetime('now', '-30 days')";
+      break;
+    case '90d':
+      timeFilter = "WHERE date > datetime('now', '-90 days')";
+      break;
+  }
+  
+  // Set grouping format based on time slice
+  switch (timeSlice) {
+    case 'hour':
+      groupFormat = "%Y-%m-%d %H:00";
+      break;
+    case 'day':
+      groupFormat = "%Y-%m-%d";
+      break;
+    case 'week':
+      // SQLite doesn't have a direct week format, so we'll use a workaround
+      groupFormat = "%Y-%W";
+      break;
+    case 'month':
+      groupFormat = "%Y-%m";
+      break;
+  }
+  
+  return db
+    .prepare(`
+      SELECT 
+        strftime('${groupFormat}', date) as time_segment,
+        SUM(CASE WHEN action = 'added' THEN 1 ELSE 0 END) as added,
+        SUM(CASE WHEN action = 'removed' THEN 1 ELSE 0 END) as removed,
+        SUM(CASE WHEN action = 'modified' THEN 1 ELSE 0 END) as modified
+      FROM stash_events
+      ${timeFilter}
+      GROUP BY time_segment
+      ORDER BY time_segment ASC
+    `)
+    .all();
+}

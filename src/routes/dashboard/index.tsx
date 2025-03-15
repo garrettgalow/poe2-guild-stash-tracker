@@ -12,6 +12,7 @@ import {
   XAxis,
   YAxis,
 } from "recharts"
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "../../components/ui/tabs"
 
 import { Button } from "../../components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../../components/ui/card"
@@ -21,6 +22,7 @@ import { TimeSeriesChart } from '../../components/TimeSeriesChart'
 import { useTopUsers } from "../../hooks/use-top-users"
 import { Skeleton } from "../../components/ui/skeleton"
 import { useUserRatios } from "../../hooks/use-user-ratios"
+import { useActivityData } from "../../hooks/use-activity-data"
 
 // Sample data for charts
 const activityData = [
@@ -119,6 +121,13 @@ export default function DashboardPage() {
   // Derived data for best and worst ratios
   const bestRatios = userRatiosData ? [...userRatiosData].sort((a, b) => b.ratio - a.ratio) : []
   const worstRatios = userRatiosData ? [...userRatiosData].sort((a, b) => a.ratio - b.ratio) : []
+
+  // Inside the component, add this hook
+  const {
+    data: activityData,
+    loading: activityLoading,
+    error: activityError
+  } = useActivityData(timeRange, timeSlice)
 
   return (
     <>
@@ -289,53 +298,137 @@ export default function DashboardPage() {
         </Card>
       </div>
 
-      <div className="mt-6 grid gap-6 md:grid-cols-2">
-        <Card className="col-span-1 md:col-span-2">
+      <div className="mt-6">
+        <Card>
           <CardHeader>
-            <CardTitle>Stash Activity</CardTitle>
-            <CardDescription>Items added and removed over time</CardDescription>
+            <CardTitle>Activity Over Time</CardTitle>
+            <CardDescription>Stash activity trends over the selected time period</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="h-[300px]">
-              <ResponsiveContainer width="100%" height="100%">
-                <AreaChart
-                  data={activityData}
-                  margin={{
-                    top: 5,
-                    right: 30,
-                    left: 20,
-                    bottom: 5,
-                  }}
-                >
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="time" />
-                  <YAxis />
-                  <Tooltip />
-                  <Legend />
-                  <Area
-                    type="monotone"
-                    dataKey="added"
-                    stackId="1"
-                    stroke="#10b981"
-                    fill="#10b981"
-                    fillOpacity={0.6}
-                    name="Items Added"
-                  />
-                  <Area
-                    type="monotone"
-                    dataKey="removed"
-                    stackId="1"
-                    stroke="#ef4444"
-                    fill="#ef4444"
-                    fillOpacity={0.6}
-                    name="Items Removed"
-                  />
-                </AreaChart>
-              </ResponsiveContainer>
-            </div>
+            <Tabs defaultValue="all">
+              <TabsList className="mb-4">
+                <TabsTrigger value="all">All Activity</TabsTrigger>
+                <TabsTrigger value="added">Added</TabsTrigger>
+                <TabsTrigger value="removed">Removed</TabsTrigger>
+                <TabsTrigger value="modified">Modified</TabsTrigger>
+              </TabsList>
+              
+              <TabsContent value="all" className="h-[300px]">
+                {activityLoading ? (
+                  <div className="flex h-full items-center justify-center">
+                    <Skeleton className="h-[250px] w-full" />
+                  </div>
+                ) : activityError ? (
+                  <div className="flex h-full items-center justify-center text-red-500">
+                    Error loading activity data
+                  </div>
+                ) : activityData.length === 0 ? (
+                  <div className="flex h-full items-center justify-center text-muted-foreground">
+                    No activity data available
+                  </div>
+                ) : (
+                  <ResponsiveContainer width="100%" height={300}>
+                    <AreaChart data={activityData}>
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis dataKey="time_segment" />
+                      <YAxis />
+                      <Tooltip />
+                      <Legend />
+                      <Area type="monotone" dataKey="added" stackId="1" stroke="#8884d8" fill="#8884d8" />
+                      <Area type="monotone" dataKey="removed" stackId="1" stroke="#82ca9d" fill="#82ca9d" />
+                      <Area type="monotone" dataKey="modified" stackId="1" stroke="#ffc658" fill="#ffc658" />
+                    </AreaChart>
+                  </ResponsiveContainer>
+                )}
+              </TabsContent>
+              
+              <TabsContent value="added" className="h-[300px]">
+                {activityLoading ? (
+                  <div className="flex h-full items-center justify-center">
+                    <Skeleton className="h-[250px] w-full" />
+                  </div>
+                ) : activityError ? (
+                  <div className="flex h-full items-center justify-center text-red-500">
+                    Error loading activity data
+                  </div>
+                ) : activityData.length === 0 ? (
+                  <div className="flex h-full items-center justify-center text-muted-foreground">
+                    No activity data available
+                  </div>
+                ) : (
+                  <ResponsiveContainer width="100%" height={300}>
+                    <AreaChart data={activityData}>
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis dataKey="time_segment" />
+                      <YAxis />
+                      <Tooltip />
+                      <Area type="monotone" dataKey="added" stroke="#8884d8" fill="#8884d8" />
+                    </AreaChart>
+                  </ResponsiveContainer>
+                )}
+              </TabsContent>
+              
+              <TabsContent value="removed" className="h-[300px]">
+                {activityLoading ? (
+                  <div className="flex h-full items-center justify-center">
+                    <Skeleton className="h-[250px] w-full" />
+                  </div>
+                ) : activityError ? (
+                  <div className="flex h-full items-center justify-center text-red-500">
+                    Error loading activity data
+                  </div>
+                ) : activityData.length === 0 ? (
+                  <div className="flex h-full items-center justify-center text-muted-foreground">
+                    No activity data available
+                  </div>
+                ) : (
+                  <ResponsiveContainer width="100%" height={300}>
+                    <AreaChart data={activityData}>
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis dataKey="time_segment" />
+                      <YAxis />
+                      <Tooltip />
+                      <Area type="monotone" dataKey="removed" stroke="#82ca9d" fill="#82ca9d" />
+                    </AreaChart>
+                  </ResponsiveContainer>
+                )}
+              </TabsContent>
+              
+              <TabsContent value="modified" className="h-[300px]">
+                {activityLoading ? (
+                  <div className="flex h-full items-center justify-center">
+                    <Skeleton className="h-[250px] w-full" />
+                  </div>
+                ) : activityError ? (
+                  <div className="flex h-full items-center justify-center text-red-500">
+                    Error loading activity data
+                  </div>
+                ) : activityData.length === 0 ? (
+                  <div className="flex h-full items-center justify-center text-muted-foreground">
+                    No activity data available
+                  </div>
+                ) : (
+                  <ResponsiveContainer width="100%" height={300}>
+                    <AreaChart data={activityData}>
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis dataKey="time_segment" />
+                      <YAxis />
+                      <Tooltip />
+                      <Area type="monotone" dataKey="modified" stroke="#ffc658" fill="#ffc658" />
+                    </AreaChart>
+                  </ResponsiveContainer>
+                )}
+              </TabsContent>
+            </Tabs>
           </CardContent>
         </Card>
+      </div>
 
+      <div className="mt-6">
+        <h1>Coming Soon!</h1>
+      </div>
+
+      <div className="mt-6 grid gap-6 md:grid-cols-2">
         <Card>
           <CardHeader>
             <CardTitle>Most Popular Items</CardTitle>
