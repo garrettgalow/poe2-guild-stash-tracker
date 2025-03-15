@@ -55,21 +55,39 @@ export async function getTableData(
 
 export async function getTopUsers(
   db: D1Database,
-  action: 'added' | 'removed',
-  limit = 10
+  action: 'added' | 'removed' | 'modified',
+  timeRange?: string
 ) {
+  let timeFilter = '';
+  
+  if (timeRange) {
+    switch (timeRange) {
+      case '24h':
+        timeFilter = "WHERE date > datetime('now', '-1 day')";
+        break;
+      case '7d':
+        timeFilter = "WHERE date > datetime('now', '-7 days')";
+        break;
+      case '30d':
+        timeFilter = "WHERE date > datetime('now', '-30 days')";
+        break;
+      case '90d':
+        timeFilter = "WHERE date > datetime('now', '-90 days')";
+        break;
+    }
+  }
+
   return db
-    .prepare(
-      `
-    SELECT user, COUNT(*) as count 
-    FROM stash_events 
-    WHERE action = ? 
-    GROUP BY user 
-    ORDER BY count DESC 
-    LIMIT ?
-  `
-    )
-    .bind(action, limit)
+    .prepare(`
+      SELECT account as user, COUNT(*) as count
+      FROM stash_events
+      ${timeFilter ? timeFilter : ''}
+      ${timeFilter ? 'AND' : 'WHERE'} action = ?
+      GROUP BY account
+      ORDER BY count DESC
+      LIMIT 10
+    `)
+    .bind(action)
     .all();
 }
 
