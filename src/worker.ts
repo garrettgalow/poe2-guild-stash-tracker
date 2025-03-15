@@ -1,7 +1,7 @@
 import { Hono } from 'hono';
 import { parse } from 'csv-parse/sync';
 import { Env } from './lib/types';
-import { insertEvents, getTopUsers, getItemsByHour } from './lib/db';
+import { insertEvents, getTopUsers, getItemsByHour, getTableData, getUserRatios, getActivityByTimeSegment } from './lib/db';
 import { StashEvent } from './lib/types';
 
 const app = new Hono<{ Bindings: Env }>();
@@ -146,22 +146,28 @@ app.post('/api/upload', async (c) => {
 
 // API routes before static file handling
 app.get('/api/charts/top-users', async (c) => {
-  const { action = 'added' } = c.req.query();
+  const action = c.req.query('action') as 'added' | 'removed' | 'modified' || 'added';
+  const timeRange = c.req.query('timeRange') || '7d';
   
-  if (action !== 'added' && action !== 'removed') {
-    return c.json({ error: 'Invalid action' }, 400);
+  // Validate action parameter
+  if (!['added', 'removed', 'modified'].includes(action)) {
+    return c.json({ error: 'Invalid action parameter' }, 400);
   }
-
-  const results = await getTopUsers(c.env.DB, action);
-
-  return c.json({
-    labels: results.results.map(r => r.user),
-    datasets: [{
-      label: `Top ${action} Users`,
-      data: results.results.map(r => r.count),
-      backgroundColor: 'rgba(54, 162, 235, 0.5)'
-    }]
-  });
+  
+  try {
+    const result = await getTopUsers(c.env.DB, action, timeRange as string);
+    
+    return c.json({
+      success: true,
+      data: result.results
+    });
+  } catch (error) {
+    console.error('Error fetching top users:', error);
+    return c.json({ 
+      success: false, 
+      error: 'Failed to fetch top users data' 
+    }, 500);
+  }
 });
 
 app.get('/api/charts/items-by-hour', async (c) => {
@@ -177,6 +183,56 @@ app.get('/api/charts/items-by-hour', async (c) => {
       tension: 0.1
     }]
   });
+});
+
+app.get('/api/stash-data', async (c) => {
+  const limit = Number(c.req.query('limit')) || 10;
+  const results = await getTableData(c.env.DB, limit);
+  
+  return c.json({
+    success: true,
+    data: results.results
+  });
+});
+
+app.get('/api/charts/user-ratios', async (c) => {
+  const timeRange = c.req.query('timeRange') || '7d';
+  const limit = Number(c.req.query('limit')) || 10;
+  
+  try {
+    const result = await getUserRatios(c.env.DB, timeRange as string, limit);
+    
+    return c.json({
+      success: true,
+      data: result.results
+    });
+  } catch (error) {
+    console.error('Error fetching user ratios:', error);
+    return c.json({ 
+      success: false, 
+      error: 'Failed to fetch user ratios data' 
+    }, 500);
+  }
+});
+
+app.get('/api/charts/activity', async (c) => {
+  const timeRange = c.req.query('timeRange') || '7d';
+  const timeSlice = c.req.query('timeSlice') || 'day';
+  
+  try {
+    const result = await getActivityByTimeSegment(c.env.DB, timeRange as string, timeSlice as string);
+    
+    return c.json({
+      success: true,
+      data: result.results
+    });
+  } catch (error) {
+    console.error('Error fetching activity data:', error);
+    return c.json({ 
+      success: false, 
+      error: 'Failed to fetch activity data' 
+    }, 500);
+  }
 });
 
 // Serve static files for all other routes
