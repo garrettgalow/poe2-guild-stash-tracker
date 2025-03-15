@@ -1,7 +1,7 @@
 import { Hono } from 'hono';
 import { parse } from 'csv-parse/sync';
 import { Env } from './lib/types';
-import { insertEvents, getTopUsers, getItemsByHour } from './lib/db';
+import { insertEvents, getTopUsers, getItemsByHour, getTableData } from './lib/db';
 import { StashEvent } from './lib/types';
 
 const app = new Hono<{ Bindings: Env }>();
@@ -176,6 +176,16 @@ app.get('/api/charts/items-by-hour', async (c) => {
       borderColor: 'rgb(75, 192, 192)',
       tension: 0.1
     }]
+  });
+});
+
+app.get('/api/stash-data', async (c) => {
+  const limit = Number(c.req.query('limit')) || 10;
+  const results = await getTableData(c.env.DB, limit);
+  
+  return c.json({
+    success: true,
+    data: results.results
   });
 });
 

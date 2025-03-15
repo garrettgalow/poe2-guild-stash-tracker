@@ -35,6 +35,24 @@ export async function insertEvents(db: D1Database, events: Partial<StashEvent>[]
   };
 }
 
+export async function getTableData(
+  db: D1Database,
+  // action: 'added' | 'removed',
+  limit = 10
+) {
+  return db
+    .prepare(
+      `
+    SELECT date, op_id, league, account, action, stash, item
+    FROM stash_events 
+    ORDER BY date DESC 
+    LIMIT ?
+  `
+    )
+    .bind(limit)
+    .all();
+}
+
 export async function getTopUsers(
   db: D1Database,
   action: 'added' | 'removed',
