@@ -55,19 +55,19 @@ export async function getTopUsers(
     .all();
 }
 
-export async function getItemsByMinute(
+export async function getItemsByHour(
   db: D1Database,
   // minutes: number = 60
 ) {
   return db
     .prepare(`
       SELECT 
-        strftime('%Y-%m-%d %H:%M', date) as minute,
+        strftime('%Y-%m-%d %H:%M', date) as hour,
         COUNT(*) as count
       FROM stash_events
-      WHERE date > datetime('now', '-24 hours') 
-      GROUP BY minute
-      ORDER BY minute ASC
+      WHERE date > datetime('now', '-30 days') 
+      GROUP BY hour
+      ORDER BY hour ASC
     `)
     // .bind(minutes)
     .all();

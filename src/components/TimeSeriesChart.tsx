@@ -29,7 +29,7 @@ export function TimeSeriesChart() {
   useEffect(() => {
     async function fetchData() {
       try {
-        const response = await fetch('/api/charts/items-by-minute');
+        const response = await fetch('/api/charts/items-by-hour');
         if (!response.ok) throw new Error('Failed to fetch data');
         const chartData = await response.json();
         setData(chartData);
@@ -41,7 +41,7 @@ export function TimeSeriesChart() {
     }
 
     fetchData();
-    const interval = setInterval(fetchData, 60000); // Update every minute
+    const interval = setInterval(fetchData, 10000); // Update every minute
     return () => clearInterval(interval);
   }, []);
 
@@ -51,7 +51,7 @@ export function TimeSeriesChart() {
 
   return (
     <div className="p-4 bg-white rounded-lg shadow">
-      <h2 className="text-lg font-semibold mb-4">Items Added/Removed per Minute</h2>
+      <h2 className="text-lg font-semibold mb-4">Items Added/Removed per Hour</h2>
       <Line
         data={data}
         options={{

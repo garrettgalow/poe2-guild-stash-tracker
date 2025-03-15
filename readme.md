@@ -12,4 +12,5 @@ This is a simple web app that allows you to track the contents of your stash in 
 ## Tech Stack
 
 Cloudflare D1
+
 Cloudflare Workers

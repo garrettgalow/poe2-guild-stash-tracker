@@ -1,7 +1,7 @@
 import { Hono } from 'hono';
 import { parse } from 'csv-parse/sync';
 import { Env } from './lib/types';
-import { insertEvents, getTopUsers, getItemsByMinute } from './lib/db';
+import { insertEvents, getTopUsers, getItemsByHour } from './lib/db';
 import { StashEvent } from './lib/types';
 
 const app = new Hono<{ Bindings: Env }>();
@@ -164,14 +164,14 @@ app.get('/api/charts/top-users', async (c) => {
   });
 });
 
-app.get('/api/charts/items-by-minute', async (c) => {
+app.get('/api/charts/items-by-hour', async (c) => {
   const minutes = Number(c.req.query('minutes')) || 60;
-  const results = await getItemsByMinute(c.env.DB);
+  const results = await getItemsByHour(c.env.DB);
   
   return c.json({
-    labels: results.results.map(r => r.minute),
+    labels: results.results.map(r => r.hour),
     datasets: [{
-      label: 'Items per Minute',
+      label: 'Items per Hour',
       data: results.results.map(r => r.count),
       borderColor: 'rgb(75, 192, 192)',
       tension: 0.1
