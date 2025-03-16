@@ -17,8 +17,6 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "../../components/ui/ta
 import { Button } from "../../components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../../components/ui/card"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../components/ui/select"
-import { FileUpload } from '../../components/FileUpload'
-import { TimeSeriesChart } from '../../components/TimeSeriesChart'
 import { useTopUsers } from "../../hooks/use-top-users"
 import { Skeleton } from "../../components/ui/skeleton"
 import { useUserRatios } from "../../hooks/use-user-ratios"
