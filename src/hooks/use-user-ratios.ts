@@ -7,7 +7,7 @@ interface UserRatio {
   ratio: number;
 }
 
-export function useUserRatios(timeRange: string) {
+export function useUserRatios(timeRange: string, limit: number, order: string) {
   const [data, setData] = useState<UserRatio[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -16,7 +16,7 @@ export function useUserRatios(timeRange: string) {
     const fetchData = async () => {
       try {
         setLoading(true);
-        const response = await fetch(`/api/charts/user-ratios?timeRange=${timeRange}`);
+        const response = await fetch(`/api/charts/user-ratios?timeRange=${timeRange}&limit=${limit}&order=${order}`);
         
         if (!response.ok) {
           throw new Error('Failed to fetch user ratios data');

@@ -112,7 +112,8 @@ export async function getItemsByHour(
 export async function getUserRatios(
   db: D1Database,
   timeRange?: string,
-  limit = 10
+  limit?: number,
+  order?: string,
 ) {
   let timeFilter = '';
   
@@ -133,6 +134,19 @@ export async function getUserRatios(
     }
   }
 
+  if (order) {
+    switch (order) {
+      case 'asc':
+        order = 'ASC';
+        break;
+      case 'desc':
+        order = 'DESC';
+        break;
+      default:
+        order = 'DESC';
+        break;
+    }
+  }
   return db
     .prepare(`
       WITH user_actions AS (
@@ -143,15 +157,15 @@ export async function getUserRatios(
         FROM stash_events
         ${timeFilter ? timeFilter : ''}
         GROUP BY account
-        HAVING additions > 0 AND removals > 0
+        HAVING additions > 0 OR removals > 0
       )
       SELECT 
         account as user, 
         additions, 
         removals,
-        CAST(additions AS REAL) / CAST(removals AS REAL) as ratio
+        additions - removals as ratio
       FROM user_actions
-      ORDER BY ratio DESC
+      ORDER BY ratio ${order}
       LIMIT ?
     `)
     .bind(limit)

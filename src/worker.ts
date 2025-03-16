@@ -198,9 +198,9 @@ app.get('/api/stash-data', async (c) => {
 app.get('/api/charts/user-ratios', async (c) => {
   const timeRange = c.req.query('timeRange') || '7d';
   const limit = Number(c.req.query('limit')) || 10;
-  
+  const order = c.req.query('order') || 'desc';
   try {
-    const result = await getUserRatios(c.env.DB, timeRange as string, limit);
+    const result = await getUserRatios(c.env.DB, timeRange as string, limit, order as string);
     
     return c.json({
       success: true,
