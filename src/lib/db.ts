@@ -9,7 +9,7 @@ export async function insertEvents(db: D1Database, events: Partial<StashEvent>[]
           `INSERT INTO stash_events (date, op_id, league, account, action, stash, item) 
            VALUES (?, ?, ?, ?, ?, ?, ?)
            ON CONFLICT(op_id) DO UPDATE SET id=id RETURNING 
-           CASE WHEN changes() = 0 THEN 1 ELSE 0 END as duplicate`
+           (SELECT 1 WHERE EXISTS (SELECT 1 FROM stash_events WHERE op_id = ?)) as isDuplicate`
         )
         .bind(
           event.date,
@@ -18,20 +18,22 @@ export async function insertEvents(db: D1Database, events: Partial<StashEvent>[]
           event.account,
           event.action,
           event.stash,
-          event.item
+          event.item,
+          event.op_id
         )
     )
   );
 
-  const changedCount = results.reduce((count, result) => {
-    console.log(result.meta);
-    return count + (result.meta?.changes ?? 0);
+  console.log('First result structure:', JSON.stringify(results[0]));
+
+  const duplicateCount = results.reduce((count, result) => {
+    return count + ((result.results[0] as { isDuplicate?: number })?.isDuplicate ?? 0);
   }, 0);
 
   return {
     total: events.length,
-    duplicates: results.length - changedCount,
-    inserted: results.length
+    duplicates: duplicateCount,
+    inserted: results.length - duplicateCount
   };
 }
 

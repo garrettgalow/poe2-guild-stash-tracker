@@ -17,7 +17,6 @@ app.post('/api/upload', async (c) => {
     }
 
     const content = await file.text();
-    console.log('CSV Content:', content.substring(0, 200));
 
     const records = parse(content, {
       columns: true,
@@ -41,7 +40,6 @@ app.post('/api/upload', async (c) => {
     }
 
     const cleanedRecords = records.map((record, index) => {
-      console.log(`Processing record ${index}:`, record);
       try {
         // Handle the BOM character in the Date field name
         const dateValue = record['﻿Date'] || record.Date;
@@ -67,7 +65,7 @@ app.post('/api/upload', async (c) => {
       }
     }).filter((record): record is CleanedRecord => record !== null);
 
-    console.log('Cleaned Records:', cleanedRecords.slice(0, 2));
+    console.log('Cleaned Records Sample:', cleanedRecords.slice(0, 2));
 
     const validRecords = cleanedRecords.filter(record => {
       const isValid = (
@@ -201,7 +199,7 @@ app.get('/api/charts/user-ratios', async (c) => {
   const order = c.req.query('order') || 'desc';
   try {
     const result = await getUserRatios(c.env.DB, timeRange as string, limit, order as string);
-    
+
     return c.json({
       success: true,
       data: result.results
