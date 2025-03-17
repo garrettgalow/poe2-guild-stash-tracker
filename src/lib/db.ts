@@ -39,20 +39,105 @@ export async function insertEvents(db: D1Database, events: Partial<StashEvent>[]
 
 export async function getTableData(
   db: D1Database,
-  // action: 'added' | 'removed',
-  limit = 10
+  {
+    account,
+    action,
+    stash,
+    item,
+    league,
+    page = 1,
+    pageSize = 10
+  }: {
+    account?: string;
+    action?: 'added' | 'removed' | 'modified';
+    stash?: string;
+    item?: string;
+    league?: string;
+    page?: number;
+    pageSize?: number;
+  }
 ) {
-  return db
+  // Build dynamic WHERE clause based on provided filters
+  const conditions = [];
+  const params = [];
+
+  if (account) {
+    conditions.push("account LIKE ?");
+    params.push(`%${account}%`);
+  }
+  
+  if (action) {
+    conditions.push("action = ?");
+    params.push(action);
+  }
+  
+  if (stash) {
+    conditions.push("stash LIKE ?");
+    params.push(`%${stash}%`);
+  }
+  
+  if (item) {
+    conditions.push("item LIKE ?");
+    params.push(`%${item}%`);
+  }
+  
+  if (league) {
+    conditions.push("league LIKE ?");
+    params.push(`%${league}%`);
+  }
+  
+  // Construct the WHERE clause
+  const whereClause = conditions.length > 0 
+    ? `WHERE ${conditions.join(" AND ")}` 
+    : "";
+  
+  // Calculate offset for pagination
+  const offset = (page - 1) * pageSize;
+  
+  // Add pagination parameters
+  params.push(pageSize);
+  params.push(offset);
+  
+  // Get paginated data
+  const dataResult = await db
     .prepare(
       `
-    SELECT date, op_id, league, account, action, stash, item
-    FROM stash_events 
-    ORDER BY date DESC 
-    LIMIT ?
-  `
+      SELECT date, op_id, league, account, action, stash, item
+      FROM stash_events 
+      ${whereClause}
+      ORDER BY date DESC 
+      LIMIT ? OFFSET ?
+      `
     )
-    .bind(limit)
+    .bind(...params)
     .all();
+    
+  // Clone the params array without pagination parameters for the count query
+  const countParams = [...params];
+  countParams.pop(); // Remove offset
+  countParams.pop(); // Remove limit
+  
+  // Get total count for pagination
+  const countResult = await db
+    .prepare(
+      `
+      SELECT COUNT(*) as total
+      FROM stash_events 
+      ${whereClause}
+      `
+    )
+    .bind(...countParams)
+    .first();
+    
+  return {
+    data: dataResult.results,
+    pagination: {
+      total: countResult?.total || 0,
+      page,
+      pageSize,
+      totalPages: Math.ceil((countResult?.total || 0) as number / pageSize)
+    }
+  };
 }
 
 export async function getTopUsers(

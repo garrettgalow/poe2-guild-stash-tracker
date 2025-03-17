@@ -184,13 +184,26 @@ app.get('/api/charts/items-by-hour', async (c) => {
 });
 
 app.get('/api/stash-data', async (c) => {
-  const limit = Number(c.req.query('limit')) || 10;
-  const results = await getTableData(c.env.DB, limit);
+  const account = c.req.query('account') || '';
+  const action = c.req.query('action') as 'added' | 'removed' | 'modified' || 'added';
+  const stash = c.req.query('stash') || '';
+  const item = c.req.query('item') || '';
+  const league = c.req.query('league') || '';
+  const page = Number(c.req.query('page')) || 1;
+  const pageSize = Number(c.req.query('pageSize')) || 10;
+
+  try {
+    const results = await getTableData(c.env.DB, { account, action, stash, item, league, page, pageSize });
   
-  return c.json({
-    success: true,
-    data: results.results
-  });
+    return c.json({
+      success: true,
+      data: results.data,
+      pagination: results.pagination
+    });
+  } catch (error) {
+    console.error('Error fetching stash data:', error);
+    return c.json({ error: 'Failed to fetch stash data' }, 500);
+  }
 });
 
 app.get('/api/charts/user-ratios', async (c) => {
