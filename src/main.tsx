@@ -1,5 +1,6 @@
 import React, { useEffect } from 'react'
 import ReactDOM from 'react-dom/client'
+import { BrowserRouter } from 'react-router-dom'
 import App from './App'
 import './globals.css'
 
@@ -25,8 +26,10 @@ function VersionCheck({ children }: { children: React.ReactNode }) {
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
-    <VersionCheck>
-      <App />
-    </VersionCheck>
+    <BrowserRouter>
+      <VersionCheck>
+        <App />
+      </VersionCheck>
+    </BrowserRouter>
   </React.StrictMode>
 ) 

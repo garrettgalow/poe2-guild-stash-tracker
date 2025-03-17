@@ -132,6 +132,12 @@ app.post('/api/upload', async (c) => {
       invalid: records.length - validRecords.length,
       invalidSamples: invalidRecords,
       sampleValidRecord: validRecords[0]
+    }, {
+      headers: {
+        'Cache-Control': 'no-cache, no-store, must-revalidate',
+        'Pragma': 'no-cache',
+        'Expires': '0'
+      }
     });
   } catch (error) {
     console.error('Upload error:', error);
@@ -158,6 +164,12 @@ app.get('/api/charts/top-users', async (c) => {
     return c.json({
       success: true,
       data: result.results
+    },{
+      headers: {
+        'Cache-Control': 'no-cache, no-store, must-revalidate',
+        'Pragma': 'no-cache',
+        'Expires': '0'
+      }
     });
   } catch (error) {
     console.error('Error fetching top users:', error);
@@ -180,6 +192,12 @@ app.get('/api/charts/items-by-hour', async (c) => {
       borderColor: 'rgb(75, 192, 192)',
       tension: 0.1
     }]
+  }, {
+    headers: {
+      'Cache-Control': 'no-cache, no-store, must-revalidate',
+      'Pragma': 'no-cache',
+      'Expires': '0'
+    }
   });
 });
 
@@ -199,6 +217,12 @@ app.get('/api/stash-data', async (c) => {
       success: true,
       data: results.data,
       pagination: results.pagination
+    },{
+      headers: {
+        'Cache-Control': 'no-cache, no-store, must-revalidate',
+        'Pragma': 'no-cache',
+        'Expires': '0'
+      }
     });
   } catch (error) {
     console.error('Error fetching stash data:', error);
@@ -216,6 +240,12 @@ app.get('/api/charts/user-ratios', async (c) => {
     return c.json({
       success: true,
       data: result.results
+    },{
+      headers: {
+        'Cache-Control': 'no-cache, no-store, must-revalidate',
+        'Pragma': 'no-cache',
+        'Expires': '0'
+      }
     });
   } catch (error) {
     console.error('Error fetching user ratios:', error);
@@ -236,6 +266,12 @@ app.get('/api/charts/activity', async (c) => {
     return c.json({
       success: true,
       data: result.results
+    },{
+      headers: {
+        'Cache-Control': 'no-cache, no-store, must-revalidate',
+        'Pragma': 'no-cache',
+        'Expires': '0'
+      }
     });
   } catch (error) {
     console.error('Error fetching activity data:', error);
@@ -246,9 +282,23 @@ app.get('/api/charts/activity', async (c) => {
   }
 });
 
-// Serve static files for all other routes
-app.all('*', async (c) => {
+// Serve static assets from the build directory
+app.get('/assets/*', async (c) => {
   return c.env.ASSETS.fetch(c.req.raw);
+});
+
+// Catch-all route for client-side routing
+app.get('*', async (c) => {
+  // Skip API routes (they should be handled above)
+  if (c.req.url.includes('/api/')) {
+    return c.notFound();
+  }
+  
+  // For all other routes, serve the index.html
+  // This allows the client-side router to handle the path
+  return c.env.ASSETS.fetch(new Request(`${new URL(c.req.url).origin}`, {
+    headers: c.req.raw.headers
+  }));
 });
 
 export default app;
