@@ -49,7 +49,7 @@ export async function getTableData(
     pageSize = 10
   }: {
     account?: string;
-    action?: 'added' | 'removed' | 'modified';
+    action?: 'added' | 'removed' | 'modified' | 'all';
     stash?: string;
     item?: string;
     league?: string;
@@ -66,7 +66,7 @@ export async function getTableData(
     params.push(`%${account}%`);
   }
   
-  if (action) {
+  if (action && action !== 'all') {
     conditions.push("action = ?");
     params.push(action);
   }

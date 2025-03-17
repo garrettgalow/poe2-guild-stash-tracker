@@ -185,7 +185,7 @@ app.get('/api/charts/items-by-hour', async (c) => {
 
 app.get('/api/stash-data', async (c) => {
   const account = c.req.query('account') || '';
-  const action = c.req.query('action') as 'added' | 'removed' | 'modified' || 'added';
+  const action = c.req.query('action') as 'added' | 'removed' | 'modified' | 'all' || '';
   const stash = c.req.query('stash') || '';
   const item = c.req.query('item') || '';
   const league = c.req.query('league') || '';

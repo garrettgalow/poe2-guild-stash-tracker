@@ -50,7 +50,7 @@ export default function SearchPage() {
       // Build query parameters
       const params = new URLSearchParams()
       if (filters.account) params.append('account', filters.account)
-      if (filters.action && filters.action !== 'all') params.append('action', filters.action)
+      if (filters.action) params.append('action', filters.action)
       if (filters.stash) params.append('stash', filters.stash)
       if (filters.item) params.append('item', filters.item)
       if (filters.league) params.append('league', filters.league)
@@ -66,7 +66,12 @@ export default function SearchPage() {
       
       const result = await response.json() as { 
         data: StashRecord[], 
-        pagination: PaginationInfo 
+        pagination: PaginationInfo,
+        success: boolean
+      }
+      
+      if (!result.success) {
+        throw new Error('Failed to fetch data')
       }
       
       setData(result.data)
