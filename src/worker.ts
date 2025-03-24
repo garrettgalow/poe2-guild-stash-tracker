@@ -297,6 +297,25 @@ app.get('/api/charts/activity', async (c) => {
   }
 });
 
+app.get('/api/last-updated', async (c) => {
+  try {
+    const result = await c.env.DB
+      .prepare('SELECT MAX(date) as lastUpdated FROM stash_events')
+      .first();
+    
+    return c.json({
+      success: true,
+      lastUpdated: result?.lastUpdated || null
+    });
+  } catch (error) {
+    console.error('Error fetching last updated date:', error);
+    return c.json({ 
+      success: false,
+      error: 'Failed to fetch last updated date' 
+    }, 500);
+  }
+});
+
 // Serve static assets from the build directory
 app.get('/assets/*', async (c) => {
   return c.env.ASSETS.fetch(c.req.raw);

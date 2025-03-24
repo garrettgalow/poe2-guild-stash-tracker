@@ -1,4 +1,4 @@
-import React from "react"
+import React, { useEffect, useState } from "react"
 import "../../globals.css"
 import { LayoutDashboardIcon, PackageIcon, Search, Upload } from "lucide-react"
 import { Link, Outlet, useLocation } from "react-router-dom"
@@ -18,13 +18,38 @@ import {
   useSidebar
 } from "./sidebar"
 
+interface LastUpdatedResponse {
+  success: boolean;
+  lastUpdated: string | null;
+}
+
 // Create a separate component for the sidebar content
 function SidebarContents() {
   const location = useLocation()
   const pathname = location.pathname
   const { state } = useSidebar()
+  const [lastUpdated, setLastUpdated] = useState<string | null>(null)
   
   const isCollapsed = state === "collapsed"
+
+  useEffect(() => {
+    // Fetch the last updated date from the API
+    async function fetchLastUpdated() {
+      try {
+        const response = await fetch('/api/last-updated')
+        if (response.ok) {
+          const data = await response.json() as LastUpdatedResponse;
+          if (data.success && data.lastUpdated) {
+            setLastUpdated(new Date(data.lastUpdated).toLocaleDateString())
+          }
+        }
+      } catch (error) {
+        console.error('Failed to fetch last updated date:', error)
+      }
+    }
+
+    fetchLastUpdated()
+  }, [])
 
   return (
     <Sidebar variant="floating" collapsible="offcanvas" className="border-r">
@@ -69,6 +94,9 @@ function SidebarContents() {
       </SidebarContent>
       <SidebarFooter className="p-4">
         <div className={`text-xs text-muted-foreground ${isCollapsed ? "hidden" : "block"}`}>
+          {lastUpdated && (
+            <p className="mb-1">Last updated: {lastUpdated}</p>
+          )}
           <p>PoE2 Stash Tracker v1.1</p>
         </div>
       </SidebarFooter>
