@@ -88,7 +88,9 @@ export default function SearchPage() {
   }, [])
 
   const handleFilterChange = (key: string, value: string) => {
-    setFilters(prev => ({ ...prev, [key]: value }))
+    // For text inputs, trim the value as it's entered
+    const trimmedValue = key === 'action' ? value : value.trim();
+    setFilters(prev => ({ ...prev, [key]: trimmedValue }))
   }
 
   const handleSearch = () => {

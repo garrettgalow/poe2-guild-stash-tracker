@@ -23,7 +23,8 @@ export default function UploadPage() {
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       const selectedFile = e.target.files[0]
-      if (selectedFile.type !== "text/csv") {
+      console.log("selectedFile.type", selectedFile.type)
+      if (selectedFile.type !== "text/csv" && selectedFile.type !== "application/vnd.ms-excel") {
         setErrorMessage("Please upload a CSV file")
         setUploadStatus("error")
         return
