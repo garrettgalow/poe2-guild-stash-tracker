@@ -6,8 +6,8 @@ export async function insertEvents(db: D1Database, events: Partial<StashEvent>[]
     events.map((event) =>
       db
         .prepare(
-          `INSERT INTO stash_events (date, op_id, league, account, action, stash, item) 
-           VALUES (?, ?, ?, ?, ?, ?, ?)
+          `INSERT INTO stash_events (date, op_id, league, account, action, stash, itemCount,item) 
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?)
            ON CONFLICT(op_id) DO UPDATE SET id=id RETURNING 
            (SELECT 1 WHERE EXISTS (SELECT 1 FROM stash_events WHERE op_id = ?)) as isDuplicate`
         )
@@ -18,6 +18,7 @@ export async function insertEvents(db: D1Database, events: Partial<StashEvent>[]
           event.account,
           event.action,
           event.stash,
+          event.itemCount,
           event.item,
           event.op_id
         )

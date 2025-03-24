@@ -36,6 +36,7 @@ app.post('/api/upload', async (c) => {
       account: string;
       action: string;
       stash: string;
+      itemCount: number;
       item: string;
     }
 
@@ -103,6 +104,20 @@ app.post('/api/upload', async (c) => {
         cleanedSampleRecord: cleanedRecords[0]
       }, 400);
     }
+
+
+    // Pull out count values from the item field
+    validRecords.forEach(record => {
+      const countMatch = record.item.match(/(^\d+)/);
+      if (countMatch) {
+        record.itemCount = parseInt(countMatch[1], 10);
+        record.item = record.item.replace(/(^\d+×)/, '').trim();
+      } else {
+        record.itemCount = 1;
+      }
+    });
+
+    console.log('Valid Records Sample:', validRecords.slice(0, 2));
 
     const insertResult = await insertEvents(c.env.DB, validRecords as Partial<StashEvent>[]);
 

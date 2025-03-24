@@ -8,6 +8,7 @@ export interface StashEvent {
   account: string;
   action: 'added' | 'removed' | 'modified';
   stash: string;
+  itemCount: number;
   item: string;
 }
 
