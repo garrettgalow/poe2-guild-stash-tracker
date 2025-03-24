@@ -1,6 +1,4 @@
 -- Create table
-DROP TABLE stash_events;
-
 CREATE TABLE stash_events (
   id INTEGER PRIMARY KEY,
   date DATETIME NOT NULL,
