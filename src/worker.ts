@@ -17,7 +17,6 @@ app.post('/api/upload', async (c) => {
     }
 
     const content = await file.text();
-    console.log('CSV Content:', content.substring(0, 200));
 
     const records = parse(content, {
       columns: true,
@@ -41,7 +40,6 @@ app.post('/api/upload', async (c) => {
     }
 
     const cleanedRecords = records.map((record, index) => {
-      console.log(`Processing record ${index}:`, record);
       try {
         // Handle the BOM character in the Date field name
         const dateValue = record['﻿Date'] || record.Date;
@@ -67,7 +65,7 @@ app.post('/api/upload', async (c) => {
       }
     }).filter((record): record is CleanedRecord => record !== null);
 
-    console.log('Cleaned Records:', cleanedRecords.slice(0, 2));
+    console.log('Cleaned Records Sample:', cleanedRecords.slice(0, 2));
 
     const validRecords = cleanedRecords.filter(record => {
       const isValid = (
@@ -134,6 +132,12 @@ app.post('/api/upload', async (c) => {
       invalid: records.length - validRecords.length,
       invalidSamples: invalidRecords,
       sampleValidRecord: validRecords[0]
+    }, {
+      headers: {
+        'Cache-Control': 'no-cache, no-store, must-revalidate',
+        'Pragma': 'no-cache',
+        'Expires': '0'
+      }
     });
   } catch (error) {
     console.error('Upload error:', error);
@@ -160,6 +164,12 @@ app.get('/api/charts/top-users', async (c) => {
     return c.json({
       success: true,
       data: result.results
+    },{
+      headers: {
+        'Cache-Control': 'no-cache, no-store, must-revalidate',
+        'Pragma': 'no-cache',
+        'Expires': '0'
+      }
     });
   } catch (error) {
     console.error('Error fetching top users:', error);
@@ -182,29 +192,60 @@ app.get('/api/charts/items-by-hour', async (c) => {
       borderColor: 'rgb(75, 192, 192)',
       tension: 0.1
     }]
+  }, {
+    headers: {
+      'Cache-Control': 'no-cache, no-store, must-revalidate',
+      'Pragma': 'no-cache',
+      'Expires': '0'
+    }
   });
 });
 
 app.get('/api/stash-data', async (c) => {
-  const limit = Number(c.req.query('limit')) || 10;
-  const results = await getTableData(c.env.DB, limit);
+  const account = c.req.query('account') || '';
+  const action = c.req.query('action') as 'added' | 'removed' | 'modified' | 'all' || '';
+  const stash = c.req.query('stash') || '';
+  const item = c.req.query('item') || '';
+  const league = c.req.query('league') || '';
+  const page = Number(c.req.query('page')) || 1;
+  const pageSize = Number(c.req.query('pageSize')) || 10;
+
+  try {
+    const results = await getTableData(c.env.DB, { account, action, stash, item, league, page, pageSize });
   
-  return c.json({
-    success: true,
-    data: results.results
-  });
+    return c.json({
+      success: true,
+      data: results.data,
+      pagination: results.pagination
+    },{
+      headers: {
+        'Cache-Control': 'no-cache, no-store, must-revalidate',
+        'Pragma': 'no-cache',
+        'Expires': '0'
+      }
+    });
+  } catch (error) {
+    console.error('Error fetching stash data:', error);
+    return c.json({ error: 'Failed to fetch stash data' }, 500);
+  }
 });
 
 app.get('/api/charts/user-ratios', async (c) => {
   const timeRange = c.req.query('timeRange') || '7d';
   const limit = Number(c.req.query('limit')) || 10;
-  
+  const order = c.req.query('order') || 'desc';
   try {
-    const result = await getUserRatios(c.env.DB, timeRange as string, limit);
-    
+    const result = await getUserRatios(c.env.DB, timeRange as string, limit, order as string);
+
     return c.json({
       success: true,
       data: result.results
+    },{
+      headers: {
+        'Cache-Control': 'no-cache, no-store, must-revalidate',
+        'Pragma': 'no-cache',
+        'Expires': '0'
+      }
     });
   } catch (error) {
     console.error('Error fetching user ratios:', error);
@@ -225,6 +266,12 @@ app.get('/api/charts/activity', async (c) => {
     return c.json({
       success: true,
       data: result.results
+    },{
+      headers: {
+        'Cache-Control': 'no-cache, no-store, must-revalidate',
+        'Pragma': 'no-cache',
+        'Expires': '0'
+      }
     });
   } catch (error) {
     console.error('Error fetching activity data:', error);
@@ -235,9 +282,23 @@ app.get('/api/charts/activity', async (c) => {
   }
 });
 
-// Serve static files for all other routes
-app.all('*', async (c) => {
+// Serve static assets from the build directory
+app.get('/assets/*', async (c) => {
   return c.env.ASSETS.fetch(c.req.raw);
+});
+
+// Catch-all route for client-side routing
+app.get('*', async (c) => {
+  // Skip API routes (they should be handled above)
+  if (c.req.url.includes('/api/')) {
+    return c.notFound();
+  }
+  
+  // For all other routes, serve the index.html
+  // This allows the client-side router to handle the path
+  return c.env.ASSETS.fetch(new Request(`${new URL(c.req.url).origin}`, {
+    headers: c.req.raw.headers
+  }));
 });
 
 export default app;

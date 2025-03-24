@@ -17,8 +17,6 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "../../components/ui/ta
 import { Button } from "../../components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../../components/ui/card"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../components/ui/select"
-import { FileUpload } from '../../components/FileUpload'
-import { TimeSeriesChart } from '../../components/TimeSeriesChart'
 import { useTopUsers } from "../../hooks/use-top-users"
 import { Skeleton } from "../../components/ui/skeleton"
 import { useUserRatios } from "../../hooks/use-user-ratios"
@@ -113,14 +111,20 @@ export default function DashboardPage() {
   } = useTopUsers("removed", timeRange)
   
   const {
-    data: userRatiosData,
-    loading: userRatiosLoading,
-    error: userRatiosError
-  } = useUserRatios(timeRange)
+    data: userRatiosDataDesc,
+    loading: userRatiosLoadingDesc,
+    error: userRatiosErrorDesc
+  } = useUserRatios(timeRange, 10, 'desc')
   
+  const {
+    data: userRatiosDataAsc,
+    loading: userRatiosLoadingAsc,
+    error: userRatiosErrorAsc
+  } = useUserRatios(timeRange, 10, 'asc')
+
   // Derived data for best and worst ratios
-  const bestRatios = userRatiosData ? [...userRatiosData].sort((a, b) => b.ratio - a.ratio) : []
-  const worstRatios = userRatiosData ? [...userRatiosData].sort((a, b) => a.ratio - b.ratio) : []
+  // const bestRatios = userRatiosData ? [...userRatiosData].sort((a, b) => b.ratio - a.ratio) : []
+  // const worstRatios = userRatiosData ? [...userRatiosData].sort((a, b) => a.ratio - b.ratio) : []
 
   // Inside the component, add this hook
   const {
@@ -234,7 +238,7 @@ export default function DashboardPage() {
           </CardHeader>
           <CardContent>
             <div className="space-y-2">
-              {userRatiosLoading ? (
+              {userRatiosLoadingDesc ? (
                 // Show loading skeletons
                 <>
                   <Skeleton className="h-5 w-full" />
@@ -243,15 +247,15 @@ export default function DashboardPage() {
                   <Skeleton className="h-5 w-full" />
                   <Skeleton className="h-5 w-full" />
                 </>
-              ) : userRatiosError ? (
+              ) : userRatiosErrorDesc ? (
                 // Show error message
                 <div className="text-sm text-red-500">Error loading data</div>
-              ) : bestRatios.length === 0 ? (
+              ) : userRatiosDataDesc.length === 0 ? (
                 // Show empty state
                 <div className="text-sm text-muted-foreground">No data available</div>
               ) : (
                 // Show actual data
-                bestRatios.slice(0, 5).map((user, index) => (
+                userRatiosDataDesc.slice(0, 5).map((user, index) => (
                   <div key={index} className="flex items-center justify-between">
                     <span className="text-sm">{user.user}</span>
                     <span className="font-medium">{user.ratio.toFixed(1)}</span>
@@ -269,7 +273,7 @@ export default function DashboardPage() {
           </CardHeader>
           <CardContent>
             <div className="space-y-2">
-              {userRatiosLoading ? (
+              {userRatiosLoadingAsc ? (
                 // Show loading skeletons
                 <>
                   <Skeleton className="h-5 w-full" />
@@ -278,15 +282,15 @@ export default function DashboardPage() {
                   <Skeleton className="h-5 w-full" />
                   <Skeleton className="h-5 w-full" />
                 </>
-              ) : userRatiosError ? (
+              ) : userRatiosErrorAsc ? (
                 // Show error message
                 <div className="text-sm text-red-500">Error loading data</div>
-              ) : worstRatios.length === 0 ? (
+              ) : userRatiosDataAsc.length === 0 ? (
                 // Show empty state
                 <div className="text-sm text-muted-foreground">No data available</div>
               ) : (
                 // Show actual data
-                worstRatios.slice(0, 5).map((user, index) => (
+                userRatiosDataAsc.slice(0, 5).map((user, index) => (
                   <div key={index} className="flex items-center justify-between">
                     <span className="text-sm">{user.user}</span>
                     <span className="font-medium">{user.ratio.toFixed(1)}</span>

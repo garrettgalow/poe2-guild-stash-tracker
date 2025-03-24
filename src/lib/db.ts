@@ -9,7 +9,7 @@ export async function insertEvents(db: D1Database, events: Partial<StashEvent>[]
           `INSERT INTO stash_events (date, op_id, league, account, action, stash, item) 
            VALUES (?, ?, ?, ?, ?, ?, ?)
            ON CONFLICT(op_id) DO UPDATE SET id=id RETURNING 
-           CASE WHEN changes() = 0 THEN 1 ELSE 0 END as duplicate`
+           (SELECT 1 WHERE EXISTS (SELECT 1 FROM stash_events WHERE op_id = ?)) as isDuplicate`
         )
         .bind(
           event.date,
@@ -18,39 +18,126 @@ export async function insertEvents(db: D1Database, events: Partial<StashEvent>[]
           event.account,
           event.action,
           event.stash,
-          event.item
+          event.item,
+          event.op_id
         )
     )
   );
 
-  const changedCount = results.reduce((count, result) => {
-    console.log(result.meta);
-    return count + (result.meta?.changes ?? 0);
+  console.log('First result structure:', JSON.stringify(results[0]));
+
+  const duplicateCount = results.reduce((count, result) => {
+    return count + ((result.results[0] as { isDuplicate?: number })?.isDuplicate ?? 0);
   }, 0);
 
   return {
     total: events.length,
-    duplicates: results.length - changedCount,
-    inserted: results.length
+    duplicates: duplicateCount,
+    inserted: results.length - duplicateCount
   };
 }
 
 export async function getTableData(
   db: D1Database,
-  // action: 'added' | 'removed',
-  limit = 10
+  {
+    account,
+    action,
+    stash,
+    item,
+    league,
+    page = 1,
+    pageSize = 10
+  }: {
+    account?: string;
+    action?: 'added' | 'removed' | 'modified' | 'all';
+    stash?: string;
+    item?: string;
+    league?: string;
+    page?: number;
+    pageSize?: number;
+  }
 ) {
-  return db
+  // Build dynamic WHERE clause based on provided filters
+  const conditions = [];
+  const params = [];
+
+  if (account) {
+    conditions.push("account LIKE ?");
+    params.push(`%${account}%`);
+  }
+  
+  if (action && action !== 'all') {
+    conditions.push("action = ?");
+    params.push(action);
+  }
+  
+  if (stash) {
+    conditions.push("stash LIKE ?");
+    params.push(`%${stash}%`);
+  }
+  
+  if (item) {
+    conditions.push("item LIKE ?");
+    params.push(`%${item}%`);
+  }
+  
+  if (league) {
+    conditions.push("league LIKE ?");
+    params.push(`%${league}%`);
+  }
+  
+  // Construct the WHERE clause
+  const whereClause = conditions.length > 0 
+    ? `WHERE ${conditions.join(" AND ")}` 
+    : "";
+  
+  // Calculate offset for pagination
+  const offset = (page - 1) * pageSize;
+  
+  // Add pagination parameters
+  params.push(pageSize);
+  params.push(offset);
+  
+  // Get paginated data
+  const dataResult = await db
     .prepare(
       `
-    SELECT date, op_id, league, account, action, stash, item
-    FROM stash_events 
-    ORDER BY date DESC 
-    LIMIT ?
-  `
+      SELECT date, op_id, league, account, action, stash, item
+      FROM stash_events 
+      ${whereClause}
+      ORDER BY date DESC 
+      LIMIT ? OFFSET ?
+      `
     )
-    .bind(limit)
+    .bind(...params)
     .all();
+    
+  // Clone the params array without pagination parameters for the count query
+  const countParams = [...params];
+  countParams.pop(); // Remove offset
+  countParams.pop(); // Remove limit
+  
+  // Get total count for pagination
+  const countResult = await db
+    .prepare(
+      `
+      SELECT COUNT(*) as total
+      FROM stash_events 
+      ${whereClause}
+      `
+    )
+    .bind(...countParams)
+    .first();
+    
+  return {
+    data: dataResult.results,
+    pagination: {
+      total: countResult?.total || 0,
+      page,
+      pageSize,
+      totalPages: Math.ceil((countResult?.total || 0) as number / pageSize)
+    }
+  };
 }
 
 export async function getTopUsers(
@@ -112,7 +199,8 @@ export async function getItemsByHour(
 export async function getUserRatios(
   db: D1Database,
   timeRange?: string,
-  limit = 10
+  limit?: number,
+  order?: string,
 ) {
   let timeFilter = '';
   
@@ -133,6 +221,19 @@ export async function getUserRatios(
     }
   }
 
+  if (order) {
+    switch (order) {
+      case 'asc':
+        order = 'ASC';
+        break;
+      case 'desc':
+        order = 'DESC';
+        break;
+      default:
+        order = 'DESC';
+        break;
+    }
+  }
   return db
     .prepare(`
       WITH user_actions AS (
@@ -143,15 +244,15 @@ export async function getUserRatios(
         FROM stash_events
         ${timeFilter ? timeFilter : ''}
         GROUP BY account
-        HAVING additions > 0 AND removals > 0
+        HAVING additions > 0 OR removals > 0
       )
       SELECT 
         account as user, 
         additions, 
         removals,
-        CAST(additions AS REAL) / CAST(removals AS REAL) as ratio
+        additions - removals as ratio
       FROM user_actions
-      ORDER BY ratio DESC
+      ORDER BY ratio ${order}
       LIMIT ?
     `)
     .bind(limit)
