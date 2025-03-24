@@ -69,7 +69,7 @@ function SidebarContents() {
       </SidebarContent>
       <SidebarFooter className="p-4">
         <div className={`text-xs text-muted-foreground ${isCollapsed ? "hidden" : "block"}`}>
-          <p>PoE Stash Tracker v1.0</p>
+          <p>PoE2 Stash Tracker v1.1</p>
         </div>
       </SidebarFooter>
     </Sidebar>
