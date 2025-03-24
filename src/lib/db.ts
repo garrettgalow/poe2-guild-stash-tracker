@@ -44,6 +44,7 @@ export async function getTableData(
     account,
     action,
     stash,
+    itemCount,
     item,
     league,
     page = 1,
@@ -53,6 +54,7 @@ export async function getTableData(
     action?: 'added' | 'removed' | 'modified' | 'all';
     stash?: string;
     item?: string;
+    itemCount?: number;
     league?: string;
     page?: number;
     pageSize?: number;
@@ -103,7 +105,7 @@ export async function getTableData(
   const dataResult = await db
     .prepare(
       `
-      SELECT date, op_id, league, account, action, stash, item
+      SELECT date, op_id, league, account, action, stash, itemCount, item
       FROM stash_events 
       ${whereClause}
       ORDER BY date DESC 

@@ -15,6 +15,7 @@ interface StashRecord {
   action: string;
   stash: string;
   item: string;
+  itemCount?: number;
 }
 
 interface PaginationInfo {
@@ -274,21 +275,22 @@ export default function SearchPage() {
                   <TableHead>Account</TableHead>
                   <TableHead>Action</TableHead>
                   <TableHead>Stash</TableHead>
+                  <TableHead>Count</TableHead>
                   <TableHead>Item</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {loading ? (
                   <TableRow>
-                    <TableCell colSpan={7} className="text-center py-4">Loading data...</TableCell>
+                    <TableCell colSpan={8} className="text-center py-4">Loading data...</TableCell>
                   </TableRow>
                 ) : error ? (
                   <TableRow>
-                    <TableCell colSpan={7} className="text-center py-4 text-red-500">{error}</TableCell>
+                    <TableCell colSpan={8} className="text-center py-4 text-red-500">{error}</TableCell>
                   </TableRow>
                 ) : data.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={7} className="text-center py-4">No data found</TableCell>
+                    <TableCell colSpan={8} className="text-center py-4">No data found</TableCell>
                   </TableRow>
                 ) : (
                   data.map((row, index) => (
@@ -311,6 +313,7 @@ export default function SearchPage() {
                         </span>
                       </TableCell>
                       <TableCell>{row.stash}</TableCell>
+                      <TableCell>{row.itemCount || 1}</TableCell>
                       <TableCell>{row.item}</TableCell>
                     </TableRow>
                   ))
