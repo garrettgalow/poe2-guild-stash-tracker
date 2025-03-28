@@ -36,6 +36,7 @@ app.post('/api/upload', async (c) => {
       account: string;
       action: string;
       stash: string;
+      itemCount: number;
       item: string;
     }
 
@@ -104,6 +105,20 @@ app.post('/api/upload', async (c) => {
       }, 400);
     }
 
+
+    // Pull out count values from the item field
+    validRecords.forEach(record => {
+      const countMatch = record.item.match(/(^\d+)/);
+      if (countMatch) {
+        record.itemCount = parseInt(countMatch[1], 10);
+        record.item = record.item.replace(/(^\d+×)/, '').trim();
+      } else {
+        record.itemCount = 1;
+      }
+    });
+
+    console.log('Valid Records Sample:', validRecords.slice(0, 2));
+
     const insertResult = await insertEvents(c.env.DB, validRecords as Partial<StashEvent>[]);
 
     const invalidRecords = records.filter(record => {
@@ -152,6 +167,7 @@ app.post('/api/upload', async (c) => {
 app.get('/api/charts/top-users', async (c) => {
   const action = c.req.query('action') as 'added' | 'removed' | 'modified' || 'added';
   const timeRange = c.req.query('timeRange') || '7d';
+  const excludeSystemAccounts = c.req.query('excludeSystemAccounts') === 'true';
   
   // Validate action parameter
   if (!['added', 'removed', 'modified'].includes(action)) {
@@ -159,7 +175,7 @@ app.get('/api/charts/top-users', async (c) => {
   }
   
   try {
-    const result = await getTopUsers(c.env.DB, action, timeRange as string);
+    const result = await getTopUsers(c.env.DB, action, timeRange as string, excludeSystemAccounts as boolean);
     
     return c.json({
       success: true,
@@ -234,8 +250,10 @@ app.get('/api/charts/user-ratios', async (c) => {
   const timeRange = c.req.query('timeRange') || '7d';
   const limit = Number(c.req.query('limit')) || 10;
   const order = c.req.query('order') || 'desc';
+  const excludeSystemAccounts = c.req.query('excludeSystemAccounts') === 'true';
+
   try {
-    const result = await getUserRatios(c.env.DB, timeRange as string, limit, order as string);
+    const result = await getUserRatios(c.env.DB, timeRange as string, limit, order as string, excludeSystemAccounts as boolean);
 
     return c.json({
       success: true,
@@ -259,9 +277,10 @@ app.get('/api/charts/user-ratios', async (c) => {
 app.get('/api/charts/activity', async (c) => {
   const timeRange = c.req.query('timeRange') || '7d';
   const timeSlice = c.req.query('timeSlice') || 'day';
+  const excludeSystemAccounts = c.req.query('excludeSystemAccounts') === 'true';
   
   try {
-    const result = await getActivityByTimeSegment(c.env.DB, timeRange as string, timeSlice as string);
+    const result = await getActivityByTimeSegment(c.env.DB, timeRange as string, timeSlice as string, excludeSystemAccounts as boolean);
     
     return c.json({
       success: true,
@@ -278,6 +297,25 @@ app.get('/api/charts/activity', async (c) => {
     return c.json({ 
       success: false, 
       error: 'Failed to fetch activity data' 
+    }, 500);
+  }
+});
+
+app.get('/api/last-updated', async (c) => {
+  try {
+    const result = await c.env.DB
+      .prepare('SELECT MAX(date) as lastUpdated FROM stash_events')
+      .first();
+    
+    return c.json({
+      success: true,
+      lastUpdated: result?.lastUpdated || null
+    });
+  } catch (error) {
+    console.error('Error fetching last updated date:', error);
+    return c.json({ 
+      success: false,
+      error: 'Failed to fetch last updated date' 
     }, 500);
   }
 });

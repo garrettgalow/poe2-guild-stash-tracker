@@ -1,15 +1,15 @@
 import { D1Database } from '@cloudflare/workers-types';
 import { StashEvent } from './types';
+import { config }from './config';
 
 export async function insertEvents(db: D1Database, events: Partial<StashEvent>[]) {
   const results = await db.batch(
     events.map((event) =>
       db
         .prepare(
-          `INSERT INTO stash_events (date, op_id, league, account, action, stash, item) 
-           VALUES (?, ?, ?, ?, ?, ?, ?)
-           ON CONFLICT(op_id) DO UPDATE SET id=id RETURNING 
-           (SELECT 1 WHERE EXISTS (SELECT 1 FROM stash_events WHERE op_id = ?)) as isDuplicate`
+          `INSERT INTO stash_events (date, op_id, league, account, action, stash, itemCount,item) 
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+           ON CONFLICT(op_id) DO NOTHING`
         )
         .bind(
           event.date,
@@ -18,22 +18,24 @@ export async function insertEvents(db: D1Database, events: Partial<StashEvent>[]
           event.account,
           event.action,
           event.stash,
-          event.item,
-          event.op_id
+          event.itemCount,
+          event.item
         )
     )
   );
 
-  console.log('First result structure:', JSON.stringify(results[0]));
+  // console.log('First result structure:', JSON.stringify(results[0]));
+  // console.log('written rows:', results[0].meta.changes);
+  // console.log('written rows:', results[1].meta.changes);
 
-  const duplicateCount = results.reduce((count, result) => {
-    return count + ((result.results[0] as { isDuplicate?: number })?.isDuplicate ?? 0);
+  const newCount = results.reduce((count, result) => {
+    return count + (result.meta.changes ?? 0);
   }, 0);
 
   return {
     total: events.length,
-    duplicates: duplicateCount,
-    inserted: results.length - duplicateCount
+    duplicates: events.length - newCount,
+    inserted: newCount
   };
 }
 
@@ -43,6 +45,7 @@ export async function getTableData(
     account,
     action,
     stash,
+    itemCount,
     item,
     league,
     page = 1,
@@ -52,6 +55,7 @@ export async function getTableData(
     action?: 'added' | 'removed' | 'modified' | 'all';
     stash?: string;
     item?: string;
+    itemCount?: number;
     league?: string;
     page?: number;
     pageSize?: number;
@@ -102,7 +106,7 @@ export async function getTableData(
   const dataResult = await db
     .prepare(
       `
-      SELECT date, op_id, league, account, action, stash, item
+      SELECT date, op_id, league, account, action, stash, itemCount, item
       FROM stash_events 
       ${whereClause}
       ORDER BY date DESC 
@@ -143,9 +147,11 @@ export async function getTableData(
 export async function getTopUsers(
   db: D1Database,
   action: 'added' | 'removed' | 'modified',
-  timeRange?: string
+  timeRange?: string,
+  excludeSystemUsers?: boolean
 ) {
   let timeFilter = '';
+  let accountFilter = '';
   
   if (timeRange) {
     switch (timeRange) {
@@ -164,12 +170,18 @@ export async function getTopUsers(
     }
   }
 
+  if (excludeSystemUsers) {
+    accountFilter = "account not in (\"" + config.systemAccounts.join('","') + "\")";
+  }
+
   return db
     .prepare(`
       SELECT account as user, COUNT(*) as count
       FROM stash_events
       ${timeFilter ? timeFilter : ''}
-      ${timeFilter ? 'AND' : 'WHERE'} action = ?
+      ${timeFilter ? 'AND' : 'WHERE'}
+      ${accountFilter ? accountFilter : ''}
+      ${accountFilter ? 'AND' : ''} action = ?
       GROUP BY account
       ORDER BY count DESC
       LIMIT 10
@@ -201,9 +213,10 @@ export async function getUserRatios(
   timeRange?: string,
   limit?: number,
   order?: string,
+  excludeSystemUsers?: boolean
 ) {
   let timeFilter = '';
-  
+  let accountFilter = '';
   if (timeRange) {
     switch (timeRange) {
       case '24h':
@@ -221,6 +234,10 @@ export async function getUserRatios(
     }
   }
 
+  if (excludeSystemUsers) {
+    accountFilter = "account not in (\"" + config.systemAccounts.join('","') + "\")";
+  }
+
   if (order) {
     switch (order) {
       case 'asc':
@@ -234,6 +251,8 @@ export async function getUserRatios(
         break;
     }
   }
+  console.log('timeFilter', timeFilter);
+  console.log('accountFilter', accountFilter);
   return db
     .prepare(`
       WITH user_actions AS (
@@ -243,6 +262,8 @@ export async function getUserRatios(
           SUM(CASE WHEN action = 'removed' THEN 1 ELSE 0 END) as removals
         FROM stash_events
         ${timeFilter ? timeFilter : ''}
+        ${accountFilter ? 'AND' : ''}
+        ${accountFilter ? accountFilter : ''}
         GROUP BY account
         HAVING additions > 0 OR removals > 0
       )
@@ -262,10 +283,12 @@ export async function getUserRatios(
 export async function getActivityByTimeSegment(
   db: D1Database,
   timeRange: string,
-  timeSlice: string
+  timeSlice: string,
+  excludeSystemUsers: boolean
 ) {
   let timeFilter = '';
   let groupFormat = '';
+  let accountFilter = '';
   
   // Set time filter based on selected range
   switch (timeRange) {
@@ -281,6 +304,10 @@ export async function getActivityByTimeSegment(
     case '90d':
       timeFilter = "WHERE date > datetime('now', '-90 days')";
       break;
+  }
+
+  if (excludeSystemUsers) {
+    accountFilter = "account not in (\"" + config.systemAccounts.join('","') + "\")";
   }
   
   // Set grouping format based on time slice
@@ -309,6 +336,8 @@ export async function getActivityByTimeSegment(
         SUM(CASE WHEN action = 'modified' THEN 1 ELSE 0 END) as modified
       FROM stash_events
       ${timeFilter}
+      ${accountFilter ? 'AND' : ''}
+      ${accountFilter ? accountFilter : ''}
       GROUP BY time_segment
       ORDER BY time_segment ASC
     `)
