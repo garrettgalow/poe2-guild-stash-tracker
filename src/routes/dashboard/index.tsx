@@ -13,6 +13,8 @@ import {
   YAxis,
 } from "recharts"
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "../../components/ui/tabs"
+import { Checkbox } from "../../components/ui/checkbox"
+import { Label } from "../../components/ui/label"
 
 import { Button } from "../../components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../../components/ui/card"
@@ -96,31 +98,32 @@ const popularItems = [
 export default function DashboardPage() {
   const [timeRange, setTimeRange] = useState("7d")
   const [timeSlice, setTimeSlice] = useState("day")
+  const [excludeSystemAccounts, setExcludeSystemAccounts] = useState(true)
   
   // Fetch data for all cards
   const { 
     data: topAddersData, 
     loading: topAddersLoading, 
     error: topAddersError 
-  } = useTopUsers("added", timeRange)
+  } = useTopUsers("added", timeRange, excludeSystemAccounts)
   
   const { 
     data: topRemoversData, 
     loading: topRemoversLoading, 
     error: topRemoversError 
-  } = useTopUsers("removed", timeRange)
+  } = useTopUsers("removed", timeRange, excludeSystemAccounts)
   
   const {
     data: userRatiosDataDesc,
     loading: userRatiosLoadingDesc,
     error: userRatiosErrorDesc
-  } = useUserRatios(timeRange, 10, 'desc')
+  } = useUserRatios(timeRange, 10, 'desc', excludeSystemAccounts)
   
   const {
     data: userRatiosDataAsc,
     loading: userRatiosLoadingAsc,
     error: userRatiosErrorAsc
-  } = useUserRatios(timeRange, 10, 'asc')
+  } = useUserRatios(timeRange, 10, 'asc', excludeSystemAccounts)
 
   // Derived data for best and worst ratios
   // const bestRatios = userRatiosData ? [...userRatiosData].sort((a, b) => b.ratio - a.ratio) : []
@@ -131,7 +134,7 @@ export default function DashboardPage() {
     data: activityData,
     loading: activityLoading,
     error: activityError
-  } = useActivityData(timeRange, timeSlice)
+  } = useActivityData(timeRange, timeSlice, excludeSystemAccounts)
 
   return (
     <>
@@ -158,6 +161,14 @@ export default function DashboardPage() {
             <SelectItem value="month">Month</SelectItem>
           </SelectContent>
         </Select>
+        <Checkbox 
+              id="exclude-system" 
+              checked={excludeSystemAccounts} 
+              onCheckedChange={(checked) => setExcludeSystemAccounts(checked as boolean)}
+            />
+            <Label htmlFor="exclude-system" className="text-sm">
+              Exclude Officers
+            </Label>
       </div>
 
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">

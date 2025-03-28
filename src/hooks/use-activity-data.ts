@@ -7,7 +7,7 @@ interface ActivityData {
   modified: number;
 }
 
-export function useActivityData(timeRange: string, timeSlice: string) {
+export function useActivityData(timeRange: string, timeSlice: string, excludeSystemAccounts: boolean) {
   const [data, setData] = useState<ActivityData[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -16,7 +16,7 @@ export function useActivityData(timeRange: string, timeSlice: string) {
     const fetchData = async () => {
       try {
         setLoading(true);
-        const response = await fetch(`/api/charts/activity?timeRange=${timeRange}&timeSlice=${timeSlice}`);
+        const response = await fetch(`/api/charts/activity?timeRange=${timeRange}&timeSlice=${timeSlice}&excludeSystemAccounts=${excludeSystemAccounts}`);
         
         if (!response.ok) {
           throw new Error('Failed to fetch activity data');
@@ -37,7 +37,7 @@ export function useActivityData(timeRange: string, timeSlice: string) {
     };
     
     fetchData();
-  }, [timeRange, timeSlice]);
+  }, [timeRange, timeSlice, excludeSystemAccounts]);
 
   return { data, loading, error };
 } 

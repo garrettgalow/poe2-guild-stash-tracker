@@ -5,7 +5,7 @@ interface TopUser {
   count: number;
 }
 
-export function useTopUsers(action: 'added' | 'removed' | 'modified', timeRange: string) {
+export function useTopUsers(action: 'added' | 'removed' | 'modified', timeRange: string, excludeSystemAccounts: boolean) {
   const [data, setData] = useState<TopUser[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -14,7 +14,7 @@ export function useTopUsers(action: 'added' | 'removed' | 'modified', timeRange:
     const fetchData = async () => {
       try {
         setLoading(true);
-        const response = await fetch(`/api/charts/top-users?action=${action}&timeRange=${timeRange}`);
+        const response = await fetch(`/api/charts/top-users?action=${action}&timeRange=${timeRange}&excludeSystemAccounts=${excludeSystemAccounts}`);
         
         if (!response.ok) {
           throw new Error('Failed to fetch top users data');
@@ -35,7 +35,7 @@ export function useTopUsers(action: 'added' | 'removed' | 'modified', timeRange:
     };
     
     fetchData();
-  }, [action, timeRange]);
+  }, [action, timeRange, excludeSystemAccounts]);
 
   return { data, loading, error };
 } 
