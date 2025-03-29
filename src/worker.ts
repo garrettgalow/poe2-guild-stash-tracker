@@ -258,9 +258,17 @@ app.get('/api/charts/user-ratios', async (c) => {
   const limit = Number(c.req.query('limit')) || 10;
   const order = c.req.query('order') || 'desc';
   const excludeSystemAccounts = c.req.query('excludeSystemAccounts') === 'true';
+  const league = c.req.query('league');
 
   try {
-    const result = await getUserRatios(c.env.DB, timeRange as string, limit, order as string, excludeSystemAccounts as boolean);
+    const result = await getUserRatios(
+      c.env.DB, 
+      timeRange as string, 
+      limit, 
+      order as string, 
+      excludeSystemAccounts as boolean,
+      league as string
+    );
 
     return c.json({
       success: true,
@@ -285,9 +293,16 @@ app.get('/api/charts/activity', async (c) => {
   const timeRange = c.req.query('timeRange') || '7d';
   const timeSlice = c.req.query('timeSlice') || 'day';
   const excludeSystemAccounts = c.req.query('excludeSystemAccounts') === 'true';
+  const league = c.req.query('league');
   
   try {
-    const result = await getActivityByTimeSegment(c.env.DB, timeRange as string, timeSlice as string, excludeSystemAccounts as boolean);
+    const result = await getActivityByTimeSegment(
+      c.env.DB, 
+      timeRange as string, 
+      timeSlice as string, 
+      excludeSystemAccounts as boolean,
+      league as string
+    );
     
     return c.json({
       success: true,

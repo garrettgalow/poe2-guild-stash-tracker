@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useLeague } from '../contexts/league-context';
 
 interface UserRatio {
   user: string;
@@ -11,12 +12,15 @@ export function useUserRatios(timeRange: string, limit: number, order: string, e
   const [data, setData] = useState<UserRatio[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const { selectedLeague } = useLeague();
 
   useEffect(() => {
     const fetchData = async () => {
       try {
         setLoading(true);
-        const response = await fetch(`/api/charts/user-ratios?timeRange=${timeRange}&limit=${limit}&order=${order}&excludeSystemAccounts=${excludeSystemAccounts}`);
+        const response = await fetch(
+          `/api/charts/user-ratios?timeRange=${timeRange}&limit=${limit}&order=${order}&excludeSystemAccounts=${excludeSystemAccounts}&league=${encodeURIComponent(selectedLeague)}`
+        );
         
         if (!response.ok) {
           throw new Error('Failed to fetch user ratios data');
@@ -37,7 +41,7 @@ export function useUserRatios(timeRange: string, limit: number, order: string, e
     };
     
     fetchData();
-  }, [timeRange, excludeSystemAccounts]);
+  }, [timeRange, limit, order, excludeSystemAccounts, selectedLeague]);
 
   return { data, loading, error };
 } 
