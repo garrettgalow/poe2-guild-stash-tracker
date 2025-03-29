@@ -168,6 +168,7 @@ app.get('/api/charts/top-users', async (c) => {
   const action = c.req.query('action') as 'added' | 'removed' | 'modified' || 'added';
   const timeRange = c.req.query('timeRange') || '7d';
   const excludeSystemAccounts = c.req.query('excludeSystemAccounts') === 'true';
+  const league = c.req.query('league');
   
   // Validate action parameter
   if (!['added', 'removed', 'modified'].includes(action)) {
@@ -175,7 +176,13 @@ app.get('/api/charts/top-users', async (c) => {
   }
   
   try {
-    const result = await getTopUsers(c.env.DB, action, timeRange as string, excludeSystemAccounts as boolean);
+    const result = await getTopUsers(
+      c.env.DB, 
+      action, 
+      timeRange as string, 
+      excludeSystemAccounts as boolean,
+      league as string
+    );
     
     return c.json({
       success: true,
@@ -251,9 +258,17 @@ app.get('/api/charts/user-ratios', async (c) => {
   const limit = Number(c.req.query('limit')) || 10;
   const order = c.req.query('order') || 'desc';
   const excludeSystemAccounts = c.req.query('excludeSystemAccounts') === 'true';
+  const league = c.req.query('league');
 
   try {
-    const result = await getUserRatios(c.env.DB, timeRange as string, limit, order as string, excludeSystemAccounts as boolean);
+    const result = await getUserRatios(
+      c.env.DB, 
+      timeRange as string, 
+      limit, 
+      order as string, 
+      excludeSystemAccounts as boolean,
+      league as string
+    );
 
     return c.json({
       success: true,
@@ -278,9 +293,16 @@ app.get('/api/charts/activity', async (c) => {
   const timeRange = c.req.query('timeRange') || '7d';
   const timeSlice = c.req.query('timeSlice') || 'day';
   const excludeSystemAccounts = c.req.query('excludeSystemAccounts') === 'true';
+  const league = c.req.query('league');
   
   try {
-    const result = await getActivityByTimeSegment(c.env.DB, timeRange as string, timeSlice as string, excludeSystemAccounts as boolean);
+    const result = await getActivityByTimeSegment(
+      c.env.DB, 
+      timeRange as string, 
+      timeSlice as string, 
+      excludeSystemAccounts as boolean,
+      league as string
+    );
     
     return c.json({
       success: true,

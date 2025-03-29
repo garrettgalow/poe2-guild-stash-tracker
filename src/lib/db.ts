@@ -148,10 +148,13 @@ export async function getTopUsers(
   db: D1Database,
   action: 'added' | 'removed' | 'modified',
   timeRange?: string,
-  excludeSystemUsers?: boolean
+  excludeSystemUsers?: boolean,
+  league?: string
 ) {
   let timeFilter = '';
   let accountFilter = '';
+  let leagueFilter = '';
+  let actionFilter = '';
   
   if (timeRange) {
     switch (timeRange) {
@@ -174,19 +177,42 @@ export async function getTopUsers(
     accountFilter = "account not in (\"" + config.systemAccounts.join('","') + "\")";
   }
 
+  if (league) {
+    leagueFilter = "league = \"" + league + "\"";
+  }
+
+  actionFilter = "action = \"" + action + "\"";
+  
+  const conditions = [];
+  // const params = [];
+
+  if (timeFilter) conditions.push(timeFilter.replace('WHERE', ''));
+  if (accountFilter) conditions.push(accountFilter);
+  if (leagueFilter) conditions.push(leagueFilter);
+  conditions.push(actionFilter);
+
+  const whereClause = conditions.length > 0 ? "WHERE " + conditions.join(" AND ") : "";
+
+  console.log('whereClause', whereClause);
+  console.log(db
+    .prepare(`
+      SELECT account as user, COUNT(*) as count
+      FROM stash_events
+      ${whereClause}
+      GROUP BY account
+      ORDER BY count DESC
+      LIMIT 10
+    `))
+
   return db
     .prepare(`
       SELECT account as user, COUNT(*) as count
       FROM stash_events
-      ${timeFilter ? timeFilter : ''}
-      ${timeFilter ? 'AND' : 'WHERE'}
-      ${accountFilter ? accountFilter : ''}
-      ${accountFilter ? 'AND' : ''} action = ?
+      ${whereClause}
       GROUP BY account
       ORDER BY count DESC
       LIMIT 10
     `)
-    .bind(action)
     .all();
 }
 
@@ -213,10 +239,13 @@ export async function getUserRatios(
   timeRange?: string,
   limit?: number,
   order?: string,
-  excludeSystemUsers?: boolean
+  excludeSystemUsers?: boolean,
+  league?: string
 ) {
   let timeFilter = '';
   let accountFilter = '';
+  let leagueFilter = '';
+  
   if (timeRange) {
     switch (timeRange) {
       case '24h':
@@ -238,6 +267,10 @@ export async function getUserRatios(
     accountFilter = "account not in (\"" + config.systemAccounts.join('","') + "\")";
   }
 
+  if (league) {
+    leagueFilter = "league = \"" + league + "\"";
+  }
+
   if (order) {
     switch (order) {
       case 'asc':
@@ -251,8 +284,14 @@ export async function getUserRatios(
         break;
     }
   }
-  console.log('timeFilter', timeFilter);
-  console.log('accountFilter', accountFilter);
+
+  const conditions = [];
+  if (timeFilter) conditions.push(timeFilter.replace('WHERE', ''));
+  if (accountFilter) conditions.push(accountFilter);
+  if (leagueFilter) conditions.push(leagueFilter);
+
+  const whereClause = conditions.length > 0 ? "WHERE " + conditions.join(" AND ") : "";
+
   return db
     .prepare(`
       WITH user_actions AS (
@@ -261,9 +300,7 @@ export async function getUserRatios(
           SUM(CASE WHEN action = 'added' THEN 1 ELSE 0 END) as additions,
           SUM(CASE WHEN action = 'removed' THEN 1 ELSE 0 END) as removals
         FROM stash_events
-        ${timeFilter ? timeFilter : ''}
-        ${accountFilter ? 'AND' : ''}
-        ${accountFilter ? accountFilter : ''}
+        ${whereClause}
         GROUP BY account
         HAVING additions > 0 OR removals > 0
       )
@@ -284,11 +321,13 @@ export async function getActivityByTimeSegment(
   db: D1Database,
   timeRange: string,
   timeSlice: string,
-  excludeSystemUsers: boolean
+  excludeSystemUsers: boolean,
+  league?: string
 ) {
   let timeFilter = '';
   let groupFormat = '';
   let accountFilter = '';
+  let leagueFilter = '';
   
   // Set time filter based on selected range
   switch (timeRange) {
@@ -309,6 +348,10 @@ export async function getActivityByTimeSegment(
   if (excludeSystemUsers) {
     accountFilter = "account not in (\"" + config.systemAccounts.join('","') + "\")";
   }
+
+  if (league) {
+    leagueFilter = "league = \"" + league + "\"";
+  }
   
   // Set grouping format based on time slice
   switch (timeSlice) {
@@ -319,13 +362,19 @@ export async function getActivityByTimeSegment(
       groupFormat = "%Y-%m-%d";
       break;
     case 'week':
-      // SQLite doesn't have a direct week format, so we'll use a workaround
       groupFormat = "%Y-%W";
       break;
     case 'month':
       groupFormat = "%Y-%m";
       break;
   }
+
+  const conditions = [];
+  if (timeFilter) conditions.push(timeFilter.replace('WHERE', ''));
+  if (accountFilter) conditions.push(accountFilter);
+  if (leagueFilter) conditions.push(leagueFilter);
+
+  const whereClause = conditions.length > 0 ? "WHERE " + conditions.join(" AND ") : "";
   
   return db
     .prepare(`
@@ -335,9 +384,7 @@ export async function getActivityByTimeSegment(
         SUM(CASE WHEN action = 'removed' THEN 1 ELSE 0 END) as removed,
         SUM(CASE WHEN action = 'modified' THEN 1 ELSE 0 END) as modified
       FROM stash_events
-      ${timeFilter}
-      ${accountFilter ? 'AND' : ''}
-      ${accountFilter ? accountFilter : ''}
+      ${whereClause}
       GROUP BY time_segment
       ORDER BY time_segment ASC
     `)

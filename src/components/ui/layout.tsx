@@ -2,6 +2,9 @@ import React, { useEffect, useState } from "react"
 import "../../globals.css"
 import { LayoutDashboardIcon, PackageIcon, Search, Upload } from "lucide-react"
 import { Link, Outlet, useLocation } from "react-router-dom"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./select"
+import { useLeague } from "../../contexts/league-context"
+import { config } from "../../lib/config"
 import {
   Sidebar,
   SidebarContent,
@@ -17,6 +20,7 @@ import {
   SidebarTrigger,
   useSidebar
 } from "./sidebar"
+import { LeagueProvider } from "../../contexts/league-context"
 
 interface LastUpdatedResponse {
   success: boolean;
@@ -29,6 +33,7 @@ function SidebarContents() {
   const pathname = location.pathname
   const { state } = useSidebar()
   const [lastUpdated, setLastUpdated] = useState<string | null>(null)
+  const { selectedLeague, setSelectedLeague } = useLeague()
   
   const isCollapsed = state === "collapsed"
 
@@ -92,7 +97,22 @@ function SidebarContents() {
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>
-      <SidebarFooter className="p-4">
+      <SidebarFooter className="p-4 space-y-4">
+        <div className={`space-y-2 ${isCollapsed ? "hidden" : "block"}`}>
+          <label className="text-xs text-muted-foreground">League</label>
+          <Select value={selectedLeague} onValueChange={setSelectedLeague}>
+            <SelectTrigger>
+              <SelectValue placeholder="Select league" />
+            </SelectTrigger>
+            <SelectContent>
+              {config.leagueList.map((league) => (
+                <SelectItem key={league} value={league}>
+                  {league}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
         <div className={`text-xs text-muted-foreground ${isCollapsed ? "hidden" : "block"}`}>
           {lastUpdated && (
             <p className="mb-1">Last updated: {lastUpdated}</p>
@@ -131,12 +151,14 @@ function MainContent() {
 
 export default function Layout() {
   return (
-    <SidebarProvider>
-      <div className="flex min-h-screen bg-background">
-        <SidebarContents />
-        <MainContent />
-      </div>
-    </SidebarProvider>
+    <LeagueProvider>
+      <SidebarProvider>
+        <div className="flex min-h-screen bg-background">
+          <SidebarContents />
+          <MainContent />
+        </div>
+      </SidebarProvider>
+    </LeagueProvider>
   )
 }
 

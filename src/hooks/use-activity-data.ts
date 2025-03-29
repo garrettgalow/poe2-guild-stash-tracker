@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useLeague } from '../contexts/league-context';
 
 interface ActivityData {
   time_segment: string;
@@ -11,12 +12,15 @@ export function useActivityData(timeRange: string, timeSlice: string, excludeSys
   const [data, setData] = useState<ActivityData[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const { selectedLeague } = useLeague();
 
   useEffect(() => {
     const fetchData = async () => {
       try {
         setLoading(true);
-        const response = await fetch(`/api/charts/activity?timeRange=${timeRange}&timeSlice=${timeSlice}&excludeSystemAccounts=${excludeSystemAccounts}`);
+        const response = await fetch(
+          `/api/charts/activity?timeRange=${timeRange}&timeSlice=${timeSlice}&excludeSystemAccounts=${excludeSystemAccounts}&league=${encodeURIComponent(selectedLeague)}`
+        );
         
         if (!response.ok) {
           throw new Error('Failed to fetch activity data');
@@ -37,7 +41,7 @@ export function useActivityData(timeRange: string, timeSlice: string, excludeSys
     };
     
     fetchData();
-  }, [timeRange, timeSlice, excludeSystemAccounts]);
+  }, [timeRange, timeSlice, excludeSystemAccounts, selectedLeague]);
 
   return { data, loading, error };
 } 

@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useLeague } from '../contexts/league-context';
 
 interface TopUser {
   user: string;
@@ -9,12 +10,15 @@ export function useTopUsers(action: 'added' | 'removed' | 'modified', timeRange:
   const [data, setData] = useState<TopUser[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const { selectedLeague } = useLeague();
 
   useEffect(() => {
     const fetchData = async () => {
       try {
         setLoading(true);
-        const response = await fetch(`/api/charts/top-users?action=${action}&timeRange=${timeRange}&excludeSystemAccounts=${excludeSystemAccounts}`);
+        const response = await fetch(
+          `/api/charts/top-users?action=${action}&timeRange=${timeRange}&excludeSystemAccounts=${excludeSystemAccounts}&league=${encodeURIComponent(selectedLeague)}`
+        );
         
         if (!response.ok) {
           throw new Error('Failed to fetch top users data');
@@ -35,7 +39,7 @@ export function useTopUsers(action: 'added' | 'removed' | 'modified', timeRange:
     };
     
     fetchData();
-  }, [action, timeRange, excludeSystemAccounts]);
+  }, [action, timeRange, excludeSystemAccounts, selectedLeague]);
 
   return { data, loading, error };
 } 

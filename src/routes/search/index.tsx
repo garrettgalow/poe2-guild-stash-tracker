@@ -5,6 +5,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from ".
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../../components/ui/card"
 import { Button } from "../../components/ui/button"
 import { Pagination, PaginationContent, PaginationEllipsis, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from "../../components/ui/pagination"
+import { useLeague } from "../../contexts/league-context"
 
 interface StashRecord {
   id?: number;
@@ -31,7 +32,6 @@ export default function SearchPage() {
     action: "",
     stash: "",
     item: "",
-    league: "",
   })
 
   const [loading, setLoading] = useState(true)
@@ -43,18 +43,19 @@ export default function SearchPage() {
     pageSize: 20,
     totalPages: 0
   })
+  const { selectedLeague } = useLeague();
 
-  const fetchData = async (page = 1) => {
+  const fetchData = async (page = 1, currentFilters = filters) => {
     try {
       setLoading(true)
       
       // Build query parameters
       const params = new URLSearchParams()
-      if (filters.account) params.append('account', filters.account)
-      if (filters.action) params.append('action', filters.action)
-      if (filters.stash) params.append('stash', filters.stash)
-      if (filters.item) params.append('item', filters.item)
-      if (filters.league) params.append('league', filters.league)
+      if (currentFilters.account) params.append('account', currentFilters.account)
+      if (currentFilters.action) params.append('action', currentFilters.action)
+      if (currentFilters.stash) params.append('stash', currentFilters.stash)
+      if (currentFilters.item) params.append('item', currentFilters.item)
+      params.append('league', selectedLeague)
       
       params.append('page', page.toString())
       params.append('pageSize', pagination.pageSize.toString())
@@ -86,12 +87,20 @@ export default function SearchPage() {
 
   useEffect(() => {
     fetchData(1)
-  }, [])
+  }, [selectedLeague])
 
   const handleFilterChange = (key: string, value: string) => {
     // For text inputs, trim the value as it's entered
     const trimmedValue = key === 'action' ? value : value.trim();
-    setFilters(prev => ({ ...prev, [key]: trimmedValue }))
+    const newFilters = { ...filters, [key]: trimmedValue };
+    setFilters(newFilters);
+    return newFilters;
+  }
+
+  const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      fetchData(1)
+    }
   }
 
   const handleSearch = () => {
@@ -183,7 +192,7 @@ export default function SearchPage() {
           <CardDescription>Filter the stash data by any column</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
             <div className="space-y-2">
               <label htmlFor="account-filter" className="text-sm font-medium">
                 Account
@@ -193,6 +202,7 @@ export default function SearchPage() {
                 placeholder="Filter by account"
                 value={filters.account}
                 onChange={(e) => handleFilterChange("account", e.target.value)}
+                onKeyDown={handleKeyPress}
               />
             </div>
 
@@ -200,7 +210,13 @@ export default function SearchPage() {
               <label htmlFor="action-filter" className="text-sm font-medium">
                 Action
               </label>
-              <Select value={filters.action} onValueChange={(value) => handleFilterChange("action", value)}>
+              <Select 
+                value={filters.action} 
+                onValueChange={(value) => {
+                  const newFilters = handleFilterChange("action", value);
+                  fetchData(1, newFilters);
+                }}
+              >
                 <SelectTrigger id="action-filter">
                   <SelectValue placeholder="Filter by action" />
                 </SelectTrigger>
@@ -222,6 +238,7 @@ export default function SearchPage() {
                 placeholder="Filter by stash"
                 value={filters.stash}
                 onChange={(e) => handleFilterChange("stash", e.target.value)}
+                onKeyDown={handleKeyPress}
               />
             </div>
 
@@ -234,18 +251,7 @@ export default function SearchPage() {
                 placeholder="Filter by item"
                 value={filters.item}
                 onChange={(e) => handleFilterChange("item", e.target.value)}
-              />
-            </div>
-
-            <div className="space-y-2">
-              <label htmlFor="league-filter" className="text-sm font-medium">
-                League
-              </label>
-              <Input
-                id="league-filter"
-                placeholder="Filter by league"
-                value={filters.league}
-                onChange={(e) => handleFilterChange("league", e.target.value)}
+                onKeyDown={handleKeyPress}
               />
             </div>
           </div>
