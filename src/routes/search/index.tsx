@@ -5,6 +5,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from ".
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../../components/ui/card"
 import { Button } from "../../components/ui/button"
 import { Pagination, PaginationContent, PaginationEllipsis, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from "../../components/ui/pagination"
+import { useLeague } from "../../contexts/league-context"
 
 interface StashRecord {
   id?: number;
@@ -31,7 +32,6 @@ export default function SearchPage() {
     action: "",
     stash: "",
     item: "",
-    league: "",
   })
 
   const [loading, setLoading] = useState(true)
@@ -43,6 +43,7 @@ export default function SearchPage() {
     pageSize: 20,
     totalPages: 0
   })
+  const { selectedLeague } = useLeague();
 
   const fetchData = async (page = 1) => {
     try {
@@ -54,7 +55,7 @@ export default function SearchPage() {
       if (filters.action) params.append('action', filters.action)
       if (filters.stash) params.append('stash', filters.stash)
       if (filters.item) params.append('item', filters.item)
-      if (filters.league) params.append('league', filters.league)
+      params.append('league', selectedLeague)
       
       params.append('page', page.toString())
       params.append('pageSize', pagination.pageSize.toString())
@@ -86,7 +87,7 @@ export default function SearchPage() {
 
   useEffect(() => {
     fetchData(1)
-  }, [])
+  }, [selectedLeague])
 
   const handleFilterChange = (key: string, value: string) => {
     // For text inputs, trim the value as it's entered
@@ -183,7 +184,7 @@ export default function SearchPage() {
           <CardDescription>Filter the stash data by any column</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
             <div className="space-y-2">
               <label htmlFor="account-filter" className="text-sm font-medium">
                 Account
@@ -234,18 +235,6 @@ export default function SearchPage() {
                 placeholder="Filter by item"
                 value={filters.item}
                 onChange={(e) => handleFilterChange("item", e.target.value)}
-              />
-            </div>
-
-            <div className="space-y-2">
-              <label htmlFor="league-filter" className="text-sm font-medium">
-                League
-              </label>
-              <Input
-                id="league-filter"
-                placeholder="Filter by league"
-                value={filters.league}
-                onChange={(e) => handleFilterChange("league", e.target.value)}
               />
             </div>
           </div>
