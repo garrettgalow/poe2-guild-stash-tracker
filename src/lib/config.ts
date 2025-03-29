@@ -10,6 +10,6 @@ export const config = {
   leagueList: [
     "Standard",
     "Hardcore",
-    "Dawn_of_the_Hunt"
+    "DotH - coming soon"
   ]
 }; 
