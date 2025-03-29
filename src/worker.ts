@@ -168,6 +168,7 @@ app.get('/api/charts/top-users', async (c) => {
   const action = c.req.query('action') as 'added' | 'removed' | 'modified' || 'added';
   const timeRange = c.req.query('timeRange') || '7d';
   const excludeSystemAccounts = c.req.query('excludeSystemAccounts') === 'true';
+  const league = c.req.query('league');
   
   // Validate action parameter
   if (!['added', 'removed', 'modified'].includes(action)) {
@@ -175,7 +176,13 @@ app.get('/api/charts/top-users', async (c) => {
   }
   
   try {
-    const result = await getTopUsers(c.env.DB, action, timeRange as string, excludeSystemAccounts as boolean);
+    const result = await getTopUsers(
+      c.env.DB, 
+      action, 
+      timeRange as string, 
+      excludeSystemAccounts as boolean,
+      league as string
+    );
     
     return c.json({
       success: true,

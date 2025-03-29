@@ -148,10 +148,13 @@ export async function getTopUsers(
   db: D1Database,
   action: 'added' | 'removed' | 'modified',
   timeRange?: string,
-  excludeSystemUsers?: boolean
+  excludeSystemUsers?: boolean,
+  league?: string
 ) {
   let timeFilter = '';
   let accountFilter = '';
+  let leagueFilter = '';
+  let actionFilter = '';
   
   if (timeRange) {
     switch (timeRange) {
@@ -174,19 +177,42 @@ export async function getTopUsers(
     accountFilter = "account not in (\"" + config.systemAccounts.join('","') + "\")";
   }
 
+  if (league) {
+    leagueFilter = "league = \"" + league + "\"";
+  }
+
+  actionFilter = "action = \"" + action + "\"";
+  
+  const conditions = [];
+  // const params = [];
+
+  if (timeFilter) conditions.push(timeFilter.replace('WHERE', ''));
+  if (accountFilter) conditions.push(accountFilter);
+  if (leagueFilter) conditions.push(leagueFilter);
+  conditions.push(actionFilter);
+
+  const whereClause = conditions.length > 0 ? "WHERE " + conditions.join(" AND ") : "";
+
+  console.log('whereClause', whereClause);
+  console.log(db
+    .prepare(`
+      SELECT account as user, COUNT(*) as count
+      FROM stash_events
+      ${whereClause}
+      GROUP BY account
+      ORDER BY count DESC
+      LIMIT 10
+    `))
+
   return db
     .prepare(`
       SELECT account as user, COUNT(*) as count
       FROM stash_events
-      ${timeFilter ? timeFilter : ''}
-      ${timeFilter ? 'AND' : 'WHERE'}
-      ${accountFilter ? accountFilter : ''}
-      ${accountFilter ? 'AND' : ''} action = ?
+      ${whereClause}
       GROUP BY account
       ORDER BY count DESC
       LIMIT 10
     `)
-    .bind(action)
     .all();
 }
 
@@ -251,8 +277,7 @@ export async function getUserRatios(
         break;
     }
   }
-  console.log('timeFilter', timeFilter);
-  console.log('accountFilter', accountFilter);
+
   return db
     .prepare(`
       WITH user_actions AS (
