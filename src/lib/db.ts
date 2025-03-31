@@ -390,3 +390,131 @@ export async function getActivityByTimeSegment(
     `)
     .all();
 }
+
+export async function getAccountStats(db: D1Database, account: string, league: string, dateRange: string = 'all') {
+  const dateFilter = getDateFilter(dateRange);
+  
+  // Create the list of currency tabs for the SQL query
+  const currencyTabsList = config.currencyTabs.map(tab => `'${tab}'`).join(',');
+  
+  const query = `
+    WITH filtered_transactions AS (
+      SELECT 
+        account,
+        item,
+        action,
+        itemCount,
+        date,
+        op_id,
+        stash
+      FROM stash_events
+      WHERE account = ? 
+      AND league = ?
+      ${dateFilter}
+    ),
+    currency_transactions AS (
+      SELECT 
+        item,
+        action,
+        itemCount,
+        date,
+        op_id
+      FROM filtered_transactions
+      WHERE item IN (SELECT item_name FROM item_category_mapping WHERE category_id = 1)
+      AND stash IN (${currencyTabsList})
+    ),
+    currency_totals AS (
+      SELECT 
+        item,
+        SUM(CASE WHEN action = 'added' THEN itemCount ELSE 0 END) as total_added,
+        SUM(CASE WHEN action = 'removed' THEN itemCount ELSE 0 END) as total_removed,
+        SUM(CASE 
+          WHEN action = 'added' THEN itemCount 
+          WHEN action = 'removed' THEN -itemCount 
+          ELSE 0 
+        END) as final_balance
+      FROM currency_transactions
+      GROUP BY item
+    ),
+    gem_totals AS (
+      SELECT 
+        SUM(CASE WHEN action = 'added' THEN itemCount ELSE 0 END) as gems_added,
+        SUM(CASE WHEN action = 'removed' THEN itemCount ELSE 0 END) as gems_removed
+      FROM filtered_transactions
+      WHERE item IN (SELECT item_name FROM item_category_mapping WHERE category_id = 2)
+      AND action IN ('added', 'removed')
+    ),
+    other_totals AS (
+      SELECT 
+        SUM(CASE WHEN action = 'added' THEN itemCount ELSE 0 END) as other_added,
+        SUM(CASE WHEN action = 'removed' THEN itemCount ELSE 0 END) as other_removed
+      FROM filtered_transactions
+      WHERE item NOT IN (SELECT item_name FROM item_category_mapping)
+      AND action IN ('added', 'removed')
+    ),
+    currency_summary AS (
+      SELECT 
+        json_group_object(
+          item,
+          json_object(
+            'added', total_added,
+            'removed', total_removed,
+            'balance', final_balance
+          )
+        ) as currency_details,
+        SUM(total_added) as total_currency_added,
+        SUM(total_removed) as total_currency_removed
+      FROM currency_totals
+    )
+    SELECT 
+      (SELECT currency_details FROM currency_summary) as currency_details,
+      (SELECT total_currency_added FROM currency_summary) as total_currency_added,
+      (SELECT total_currency_removed FROM currency_summary) as total_currency_removed,
+      (SELECT gems_added FROM gem_totals) as gems_added,
+      (SELECT gems_removed FROM gem_totals) as gems_removed,
+      (SELECT other_added FROM other_totals) as other_added,
+      (SELECT other_removed FROM other_totals) as other_removed,
+      (SELECT total_currency_added FROM currency_summary) + 
+        COALESCE((SELECT gems_added FROM gem_totals), 0) + 
+        COALESCE((SELECT other_added FROM other_totals), 0) as total_added,
+      (SELECT total_currency_removed FROM currency_summary) + 
+        COALESCE((SELECT gems_removed FROM gem_totals), 0) + 
+        COALESCE((SELECT other_removed FROM other_totals), 0) as total_removed
+    FROM (SELECT 1)
+  `;
+
+  const result = await db.prepare(query).bind(account, league).first();
+  
+  if (!result) {
+    return null;
+  }
+
+  return {
+    totalAdded: result.total_added,
+    totalRemoved: result.total_removed,
+    currency: JSON.parse(result.currency_details as string),
+    gems: {
+      added: result.gems_added || 0,
+      removed: result.gems_removed || 0
+    },
+    other: {
+      added: result.other_added || 0,
+      removed: result.other_removed || 0
+    }
+  };
+}
+
+// Helper function to get date filter based on range
+function getDateFilter(range: string): string {
+  const now = new Date();
+  switch (range) {
+    case '24h':
+      return `AND date >= datetime('now', '-1 day')`;
+    case '7d':
+      return `AND date >= datetime('now', '-7 days')`;
+    case '30d':
+      return `AND date >= datetime('now', '-30 days')`;
+    default:
+      return '';
+  }
+}

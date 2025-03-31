@@ -6,6 +6,14 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../..
 import { Button } from "../../components/ui/button"
 import { Pagination, PaginationContent, PaginationEllipsis, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from "../../components/ui/pagination"
 import { useLeague } from "../../contexts/league-context"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "../../components/ui/tabs"
+import { ArrowDownIcon, Filter } from "lucide-react"
+import { ArrowUpIcon } from "lucide-react"
+import { Badge } from "../../components/ui/badge"
+import { PackageIcon } from "lucide-react"
+import { GemIcon } from "lucide-react"
+import { CoinsIcon } from "lucide-react"
+import { config } from "../../lib/config"
 
 interface StashRecord {
   id?: number;
@@ -26,6 +34,26 @@ interface PaginationInfo {
   totalPages: number;
 }
 
+interface AccountStats {
+  totalAdded: number;
+  totalRemoved: number;
+  currency: Record<string, { added: number; removed: number }>;
+  gems: { added: number; removed: number };
+  other: { added: number; removed: number };
+}
+
+interface ApiResponse<T> {
+  success: boolean;
+  data: T;
+}
+
+const dateRangeOptions = [
+  { value: "all", label: "All Time" },
+  { value: "24h", label: "Last 24 Hours" },
+  { value: "7d", label: "Last 7 Days" },
+  { value: "30d", label: "Last 30 Days" }
+]
+
 export default function SearchPage() {
   const [filters, setFilters] = useState({
     account: "",
@@ -37,6 +65,8 @@ export default function SearchPage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [data, setData] = useState<StashRecord[]>([])
+  const [accountStats, setAccountStats] = useState<AccountStats | null>(null)
+  const [statsDateRange, setStatsDateRange] = useState("all")
   const [pagination, setPagination] = useState<PaginationInfo>({
     total: 0,
     page: 1,
@@ -44,6 +74,33 @@ export default function SearchPage() {
     totalPages: 0
   })
   const { selectedLeague } = useLeague();
+
+  const fetchAccountStats = async (account: string, dateRange: string) => {
+    try {
+      const params = new URLSearchParams({
+        account,
+        league: selectedLeague,
+        dateRange
+      });
+      
+      const response = await fetch(`/api/account-stats?${params.toString()}`);
+      
+      if (!response.ok) {
+        throw new Error('Failed to fetch account stats');
+      }
+      
+      const result = await response.json() as ApiResponse<AccountStats>;
+      
+      if (!result.success) {
+        throw new Error('Failed to fetch account stats');
+      }
+      
+      setAccountStats(result.data);
+    } catch (err) {
+      console.error('Error fetching account stats:', err);
+      setAccountStats(null);
+    }
+  };
 
   const fetchData = async (page = 1, currentFilters = filters) => {
     try {
@@ -89,11 +146,28 @@ export default function SearchPage() {
     fetchData(1)
   }, [selectedLeague])
 
+  const handleStatsDateRangeChange = (value: string) => {
+    setStatsDateRange(value);
+    if (filters.account) {
+      fetchAccountStats(filters.account, value);
+    }
+  }
+
   const handleFilterChange = (key: string, value: string) => {
     // For text inputs, trim the value as it's entered
     const trimmedValue = key === 'action' ? value : value.trim();
     const newFilters = { ...filters, [key]: trimmedValue };
     setFilters(newFilters);
+
+    // If account filter is set, fetch account stats
+    if (key === "account") {
+      if (value) {
+        fetchAccountStats(value, statsDateRange);
+      } else {
+        setAccountStats(null);
+      }
+    }
+
     return newFilters;
   }
 
@@ -212,8 +286,8 @@ export default function SearchPage() {
               </label>
               <Select 
                 value={filters.action} 
-                onValueChange={(value) => {
-                  const newFilters = handleFilterChange("action", value);
+                onValueChange={async (value) => {
+                  const newFilters = await handleFilterChange("action", value);
                   fetchData(1, newFilters);
                 }}
               >
@@ -260,6 +334,151 @@ export default function SearchPage() {
           </div>
         </CardContent>
       </Card>
+
+      {accountStats && (
+        <Card className="mb-6">
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle className="flex items-center gap-2">Account Statistics: {filters.account}</CardTitle>
+                <CardDescription>In progress. All-time mostly works, but date filters are not working.</CardDescription>
+              </div>
+              <div className="flex items-center gap-4">
+                <div className="flex items-center gap-2">
+                  <Badge variant="outline" className="bg-emerald-50 text-emerald-700 border-emerald-200">
+                    <ArrowUpIcon className="mr-1 h-3 w-3" /> {accountStats.totalAdded} Added
+                  </Badge>
+                  <Badge variant="outline" className="bg-rose-50 text-rose-700 border-rose-200">
+                    <ArrowDownIcon className="mr-1 h-3 w-3" /> {accountStats.totalRemoved} Removed
+                  </Badge>
+                  <div className="flex items-center gap-2">
+                  <Select value={statsDateRange} onValueChange={handleStatsDateRangeChange}>
+                    <SelectTrigger className="w-[160px]">
+                      <SelectValue placeholder="Date Range" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {dateRangeOptions.map((option) => (
+                        <SelectItem key={option.value} value={option.value}>
+                          {option.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="rounded-md border">
+              <Table>
+                <TableHeader>
+                  <TableRow className="bg-muted/50">
+                    <TableHead className="w-[40%]">Item</TableHead>
+                    <TableHead className="text-center">Added</TableHead>
+                    <TableHead className="text-center">Removed</TableHead>
+                    <TableHead className="text-center">Net Change</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {/* Currency Items */}
+                  {Object.entries(accountStats.currency)
+                    .filter(([_, stats]) => stats.added > 0 || stats.removed > 0)
+                    .map(([item, stats]) => (
+                      <TableRow key={item}>
+                        <TableCell className="font-medium">{item}</TableCell>
+                        <TableCell className="text-center text-emerald-600 font-medium">{stats.added}</TableCell>
+                        <TableCell className="text-center text-rose-600 font-medium">{stats.removed}</TableCell>
+                        <TableCell className="text-center">
+                          <span
+                            className={`font-medium ${
+                              stats.added - stats.removed > 0
+                                ? "text-emerald-600"
+                                : stats.added - stats.removed < 0
+                                  ? "text-rose-600"
+                                  : ""
+                            }`}
+                          >
+                            {stats.added - stats.removed > 0 && "+"}
+                            {stats.added - stats.removed}
+                          </span>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+
+                  {/* Skill Gems (Aggregated) */}
+                  {accountStats.gems.added > 0 || accountStats.gems.removed > 0 ? (
+                    <TableRow className="bg-muted/30">
+                      <TableCell className="font-medium">Skill Gems (All)</TableCell>
+                      <TableCell className="text-center text-emerald-600 font-medium">
+                        {accountStats.gems.added}
+                      </TableCell>
+                      <TableCell className="text-center text-rose-600 font-medium">
+                        {accountStats.gems.removed}
+                      </TableCell>
+                      <TableCell className="text-center">
+                        <span
+                          className={`font-medium ${
+                            accountStats.gems.added - accountStats.gems.removed > 0
+                              ? "text-emerald-600"
+                              : accountStats.gems.added - accountStats.gems.removed < 0
+                                ? "text-rose-600"
+                                : ""
+                          }`}
+                        >
+                          {accountStats.gems.added - accountStats.gems.removed > 0 && "+"}
+                          {accountStats.gems.added - accountStats.gems.removed}
+                        </span>
+                      </TableCell>
+                    </TableRow>
+                  ) : null}
+
+                  {/* Other Items (Aggregated) */}
+                  {accountStats.other.added > 0 || accountStats.other.removed > 0 ? (
+                    <TableRow className="bg-muted/30">
+                      <TableCell className="font-medium">Other Items</TableCell>
+                      <TableCell className="text-center text-emerald-600 font-medium">
+                        {accountStats.other.added}
+                      </TableCell>
+                      <TableCell className="text-center text-rose-600 font-medium">
+                        {accountStats.other.removed}
+                      </TableCell>
+                      <TableCell className="text-center">
+                        <span
+                          className={`font-medium ${
+                            accountStats.other.added - accountStats.other.removed > 0
+                              ? "text-emerald-600"
+                              : accountStats.other.added - accountStats.other.removed < 0
+                                ? "text-rose-600"
+                                : ""
+                          }`}
+                        >
+                          {accountStats.other.added - accountStats.other.removed > 0 && "+"}
+                          {accountStats.other.added - accountStats.other.removed}
+                        </span>
+                      </TableCell>
+                    </TableRow>
+                  ) : null}
+
+                  {/* Show message if no items found */}
+                  {Object.entries(accountStats.currency).filter(([_, stats]) => stats.added > 0 || stats.removed > 0)
+                    .length === 0 &&
+                    accountStats.gems.added === 0 &&
+                    accountStats.gems.removed === 0 &&
+                    accountStats.other.added === 0 &&
+                    accountStats.other.removed === 0 && (
+                      <TableRow>
+                        <TableCell colSpan={4} className="text-center py-6 text-muted-foreground">
+                          No item transactions found for this account
+                        </TableCell>
+                      </TableRow>
+                    )}
+                </TableBody>
+              </Table>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       <Card>
         <CardHeader>

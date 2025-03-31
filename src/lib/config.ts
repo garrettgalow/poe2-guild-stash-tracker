@@ -38,6 +38,12 @@ export const config = {
 
   gemItems: [
     "Uncut Skill Gem"
+  ],
+
+  currencyTabs: [
+      "iCurrency",
+      "mCurrency",
+      "Currency (lock)"
   ]
 
 }; 

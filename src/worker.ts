@@ -1,7 +1,7 @@
 import { Hono } from 'hono';
 import { parse } from 'csv-parse/sync';
 import { Env } from './lib/types';
-import { insertEvents, getTopUsers, getItemsByHour, getTableData, getUserRatios, getActivityByTimeSegment } from './lib/db';
+import { insertEvents, getTopUsers, getItemsByHour, getTableData, getUserRatios, getActivityByTimeSegment, getAccountStats } from './lib/db';
 import { StashEvent } from './lib/types';
 
 const app = new Hono<{ Bindings: Env }>();
@@ -338,6 +338,34 @@ app.get('/api/last-updated', async (c) => {
     return c.json({ 
       success: false,
       error: 'Failed to fetch last updated date' 
+    }, 500);
+  }
+});
+
+app.get('/api/account-stats', async (c) => {
+  const account = c.req.query('account') as string;
+  const league = c.req.query('league') as string;
+  const dateRange = (c.req.query('dateRange') as string) || 'all';
+
+  if (!account || !league) {
+    return c.json({ 
+      success: false, 
+      error: 'Account and league are required' 
+    }, 400);
+  }
+
+  try {
+    const stats = await getAccountStats(c.env.DB, account, league, dateRange);
+    
+    return c.json({ 
+      success: true, 
+      data: stats 
+    });
+  } catch (error) {
+    console.error('Error fetching account stats:', error);
+    return c.json({ 
+      success: false, 
+      error: 'Failed to fetch account statistics' 
     }, 500);
   }
 });
