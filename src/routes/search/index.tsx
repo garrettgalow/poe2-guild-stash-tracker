@@ -533,23 +533,57 @@ export default function SearchPage() {
                       <TableCell>{formatDate(row.date)}</TableCell>
                       <TableCell>{row.op_id}</TableCell>
                       <TableCell>{row.league}</TableCell>
-                      <TableCell>{row.account}</TableCell>
                       <TableCell>
-                        <span
+                        <button
+                          onClick={() => {
+                            handleFilterChange("account", row.account);
+                            fetchData(1, { ...filters, account: row.account });
+                          }}
+                          className="text-primary hover:underline"
+                        >
+                          {row.account}
+                        </button>
+                      </TableCell>
+                      <TableCell>
+                        <button
+                          onClick={() => {
+                            handleFilterChange("action", row.action);
+                            fetchData(1, { ...filters, action: row.action });
+                          }}
                           className={`inline-flex items-center rounded-full px-2 py-1 text-xs font-medium ${
                             row.action === "added"
-                              ? "bg-emerald-100 text-emerald-700"
+                              ? "bg-emerald-100 text-emerald-700 hover:bg-emerald-200"
                               : row.action === "removed"
-                                ? "bg-rose-100 text-rose-700"
-                                : "bg-amber-100 text-amber-700"
+                                ? "bg-rose-100 text-rose-700 hover:bg-rose-200"
+                                : "bg-amber-100 text-amber-700 hover:bg-amber-200"
                           }`}
                         >
                           {row.action}
-                        </span>
+                        </button>
                       </TableCell>
-                      <TableCell>{row.stash}</TableCell>
+                      <TableCell>
+                        <button
+                          onClick={() => {
+                            handleFilterChange("stash", row.stash);
+                            fetchData(1, { ...filters, stash: row.stash });
+                          }}
+                          className="text-primary hover:underline"
+                        >
+                          {row.stash}
+                        </button>
+                      </TableCell>
                       <TableCell>{row.itemCount || 1}</TableCell>
-                      <TableCell>{row.item}</TableCell>
+                      <TableCell>
+                        <button
+                          onClick={() => {
+                            handleFilterChange("item", row.item);
+                            fetchData(1, { ...filters, item: row.item });
+                          }}
+                          className="text-primary hover:underline"
+                        >
+                          {row.item}
+                        </button>
+                      </TableCell>
                     </TableRow>
                   ))
                 )}
