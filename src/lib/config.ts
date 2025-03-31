@@ -34,6 +34,10 @@ export const config = {
     "Gemcutters Prism",
     "Glassblowers Bauble",
     "Artificer's Orb"
-]
+  ],
+
+  gemItems: [
+    "Uncut Skill Gem"
+  ]
 
 }; 
