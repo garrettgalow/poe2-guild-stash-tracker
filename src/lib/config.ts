@@ -1,11 +1,19 @@
 // Configuration values for the application
 export const config = {
   // Accounts to filter out in dashboard
-  systemAccounts: [
+  systemAccounts: [ // Set to your guild's officers
     "iceb#4364",
     "Yukkuri#6816",
     "snowpeach#7736"
   ],
+
+  currencyTabs: [ // Set to your guild's currency tabs
+    "iCurrency",
+    "mCurrency",
+    "Currency (lock)"
+  ],
+
+  // Values below should not need to be changed but can be overridden if needed
 
   leagueList: [
     "Standard",
@@ -38,12 +46,6 @@ export const config = {
 
   gemItems: [
     "Uncut Skill Gem"
-  ],
-
-  currencyTabs: [
-      "iCurrency",
-      "mCurrency",
-      "Currency (lock)"
   ]
 
 }; 

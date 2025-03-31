@@ -375,9 +375,9 @@ export default function SearchPage() {
                 <TableHeader>
                   <TableRow className="bg-muted/50">
                     <TableHead className="w-[40%]">Item</TableHead>
+                    <TableHead className="text-center">Net Change</TableHead>
                     <TableHead className="text-center">Added</TableHead>
                     <TableHead className="text-center">Removed</TableHead>
-                    <TableHead className="text-center">Net Change</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -387,8 +387,6 @@ export default function SearchPage() {
                     .map(([item, stats]) => (
                       <TableRow key={item}>
                         <TableCell className="font-medium">{item}</TableCell>
-                        <TableCell className="text-center text-emerald-600 font-medium">{stats.added}</TableCell>
-                        <TableCell className="text-center text-rose-600 font-medium">{stats.removed}</TableCell>
                         <TableCell className="text-center">
                           <span
                             className={`font-medium ${
@@ -403,6 +401,8 @@ export default function SearchPage() {
                             {stats.added - stats.removed}
                           </span>
                         </TableCell>
+                        <TableCell className="text-center text-emerald-600 font-medium">{stats.added}</TableCell>
+                        <TableCell className="text-center text-rose-600 font-medium">{stats.removed}</TableCell>
                       </TableRow>
                     ))}
 
