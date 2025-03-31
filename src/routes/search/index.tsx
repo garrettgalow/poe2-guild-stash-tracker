@@ -14,6 +14,7 @@ import { PackageIcon } from "lucide-react"
 import { GemIcon } from "lucide-react"
 import { CoinsIcon } from "lucide-react"
 import { config } from "../../lib/config"
+import { useSearchParams } from "react-router-dom"
 
 interface StashRecord {
   id?: number;
@@ -55,8 +56,9 @@ const dateRangeOptions = [
 ]
 
 export default function SearchPage() {
+  const [searchParams] = useSearchParams();
   const [filters, setFilters] = useState({
-    account: "",
+    account: searchParams.get('account') || "",
     action: "",
     stash: "",
     item: "",
@@ -145,6 +147,14 @@ export default function SearchPage() {
   useEffect(() => {
     fetchData(1)
   }, [selectedLeague])
+
+  useEffect(() => {
+    // If there's an account in the URL, fetch its stats
+    const accountFromUrl = searchParams.get('account');
+    if (accountFromUrl) {
+      fetchAccountStats(accountFromUrl, statsDateRange);
+    }
+  }, [searchParams, statsDateRange]);
 
   const handleStatsDateRangeChange = (value: string) => {
     setStatsDateRange(value);
