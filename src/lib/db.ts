@@ -297,8 +297,8 @@ export async function getUserRatios(
       WITH user_actions AS (
         SELECT 
           account,
-          SUM(CASE WHEN action = 'added' THEN 1 ELSE 0 END) as additions,
-          SUM(CASE WHEN action = 'removed' THEN 1 ELSE 0 END) as removals
+          SUM(CASE WHEN action = 'added' THEN itemCount ELSE 0 END) as additions,
+          SUM(CASE WHEN action = 'removed' THEN itemCount ELSE 0 END) as removals
         FROM stash_events
         ${whereClause}
         GROUP BY account
