@@ -18,7 +18,8 @@ export const config = {
   leagueList: [
     "Standard",
     "Hardcore",
-    "DotH - coming soon"
+    "Dawn of the Hunt",
+    "HC Dawn of the Hunt"
   ],
 
   currencyItems: [
