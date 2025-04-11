@@ -16,10 +16,10 @@ export const config = {
   // Values below should not need to be changed but can be overridden if needed
 
   leagueList: [
-    "Standard",
-    "Hardcore",
     "Dawn of the Hunt",
-    "HC Dawn of the Hunt"
+    "HC Dawn of the Hunt",
+    "Standard",
+    "Hardcore"    
   ],
 
   currencyItems: [
