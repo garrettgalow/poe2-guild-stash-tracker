@@ -407,7 +407,7 @@ export default function SearchPage() {
                                   : ""
                             }`}
                           >
-                            {stats.added - stats.removed > 0 && "+"}
+                            {stats.added - stats.removed > 0 ? "+" : ""}
                             {stats.added - stats.removed}
                           </span>
                         </TableCell>
@@ -420,12 +420,6 @@ export default function SearchPage() {
                   {accountStats.gems.added > 0 || accountStats.gems.removed > 0 ? (
                     <TableRow className="bg-muted/30">
                       <TableCell className="font-medium">Skill Gems (All)</TableCell>
-                      <TableCell className="text-center text-emerald-600 font-medium">
-                        {accountStats.gems.added}
-                      </TableCell>
-                      <TableCell className="text-center text-rose-600 font-medium">
-                        {accountStats.gems.removed}
-                      </TableCell>
                       <TableCell className="text-center">
                         <span
                           className={`font-medium ${
@@ -436,10 +430,12 @@ export default function SearchPage() {
                                 : ""
                           }`}
                         >
-                          {accountStats.gems.added - accountStats.gems.removed > 0 && "+"}
+                          {accountStats.gems.added - accountStats.gems.removed > 0 ? "+" : ""}
                           {accountStats.gems.added - accountStats.gems.removed}
                         </span>
                       </TableCell>
+                      <TableCell className="text-center text-emerald-600 font-medium">{accountStats.gems.added}</TableCell>
+                      <TableCell className="text-center text-rose-600 font-medium">{accountStats.gems.removed}</TableCell>
                     </TableRow>
                   ) : null}
 
@@ -447,12 +443,6 @@ export default function SearchPage() {
                   {accountStats.other.added > 0 || accountStats.other.removed > 0 ? (
                     <TableRow className="bg-muted/30">
                       <TableCell className="font-medium">Other Items</TableCell>
-                      <TableCell className="text-center text-emerald-600 font-medium">
-                        {accountStats.other.added}
-                      </TableCell>
-                      <TableCell className="text-center text-rose-600 font-medium">
-                        {accountStats.other.removed}
-                      </TableCell>
                       <TableCell className="text-center">
                         <span
                           className={`font-medium ${
@@ -463,10 +453,12 @@ export default function SearchPage() {
                                 : ""
                           }`}
                         >
-                          {accountStats.other.added - accountStats.other.removed > 0 && "+"}
+                          {accountStats.other.added - accountStats.other.removed > 0 ? "+" : ""}
                           {accountStats.other.added - accountStats.other.removed}
                         </span>
                       </TableCell>
+                      <TableCell className="text-center text-emerald-600 font-medium">{accountStats.other.added}</TableCell>
+                      <TableCell className="text-center text-rose-600 font-medium">{accountStats.other.removed}</TableCell>
                     </TableRow>
                   ) : null}
 
