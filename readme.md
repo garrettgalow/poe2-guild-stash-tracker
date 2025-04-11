@@ -20,13 +20,14 @@ This is a simple web app that allows you to track the contents of your guild sta
 * Cloudflare D1
 * Cloudflare Workers & Pages
 
-The free tiers are on these products are very forgiving so its very unlikely you would need to have to pay. No credit card required to start.
+The free tiers are on these products are very forgiving so its very unlikely you would need to have to pay. No credit card required to start. The limiting factor is execution time on the worker when uploading data which might require you to upgrade to $5/month.
 
 ## Setup (not quite tested)
 
 1. Clone
 2. Setup wrangler (need to run `wrangler login` which will require a free Cloudflare account)
-3. `npm run build && npx wrangler dev` to test locally
-4. `npm run deploy` to deploy to 'prod'
+3. You might need to update the wrangler.jsonc with some ids.
+4. `npm run build && npx wrangler dev` to test locally
+5. `npm run deploy` to deploy to 'prod'
 
 This will deploy behind a `workers.dev` domain. Mapping to your own domain is an exercise left to the reader.
