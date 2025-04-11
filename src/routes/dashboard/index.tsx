@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react"
 import { ArrowDownIcon, ArrowUpIcon, ChevronDown, TrendingDownIcon, TrendingUpIcon } from "lucide-react"
+import { Link, useNavigate } from "react-router-dom"
 import {
   Area,
   AreaChart,
@@ -99,6 +100,7 @@ export default function DashboardPage() {
   const [timeRange, setTimeRange] = useState("7d")
   const [timeSlice, setTimeSlice] = useState("day")
   const [excludeSystemAccounts, setExcludeSystemAccounts] = useState(true)
+  const navigate = useNavigate();
   
   // Fetch data for all cards
   const { 
@@ -135,6 +137,10 @@ export default function DashboardPage() {
     loading: activityLoading,
     error: activityError
   } = useActivityData(timeRange, timeSlice, excludeSystemAccounts)
+
+  const handleAccountClick = (account: string) => {
+    navigate(`/search?account=${encodeURIComponent(account)}`);
+  };
 
   return (
     <>
@@ -198,7 +204,12 @@ export default function DashboardPage() {
                 // Show actual data
                 topAddersData.slice(0, 5).map((user, index) => (
                   <div key={index} className="flex items-center justify-between">
-                    <span className="text-sm">{user.user}</span>
+                    <button 
+                      onClick={() => handleAccountClick(user.user)}
+                      className="text-sm text-primary hover:underline"
+                    >
+                      {user.user}
+                    </button>
                     <span className="font-medium">{user.count}</span>
                   </div>
                 ))
@@ -233,7 +244,12 @@ export default function DashboardPage() {
                 // Show actual data
                 topRemoversData.slice(0, 5).map((user, index) => (
                   <div key={index} className="flex items-center justify-between">
-                    <span className="text-sm">{user.user}</span>
+                    <button 
+                      onClick={() => handleAccountClick(user.user)}
+                      className="text-sm text-primary hover:underline"
+                    >
+                      {user.user}
+                    </button>
                     <span className="font-medium">{user.count}</span>
                   </div>
                 ))
@@ -268,7 +284,12 @@ export default function DashboardPage() {
                 // Show actual data
                 userRatiosDataDesc.slice(0, 5).map((user, index) => (
                   <div key={index} className="flex items-center justify-between">
-                    <span className="text-sm">{user.user}</span>
+                    <button 
+                      onClick={() => handleAccountClick(user.user)}
+                      className="text-sm text-primary hover:underline"
+                    >
+                      {user.user}
+                    </button>
                     <span className="font-medium">{user.ratio.toFixed(1)}</span>
                   </div>
                 ))
@@ -303,7 +324,12 @@ export default function DashboardPage() {
                 // Show actual data
                 userRatiosDataAsc.slice(0, 5).map((user, index) => (
                   <div key={index} className="flex items-center justify-between">
-                    <span className="text-sm">{user.user}</span>
+                    <button 
+                      onClick={() => handleAccountClick(user.user)}
+                      className="text-sm text-primary hover:underline"
+                    >
+                      {user.user}
+                    </button>
                     <span className="font-medium">{user.ratio.toFixed(1)}</span>
                   </div>
                 ))
