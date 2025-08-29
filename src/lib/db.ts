@@ -7,8 +7,8 @@ export async function insertEvents(db: D1Database, events: Partial<StashEvent>[]
     events.map((event) =>
       db
         .prepare(
-          `INSERT INTO stash_events (date, op_id, league, account, action, stash, itemCount,item) 
-           VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+          `INSERT INTO stash_events (date, op_id, league, account, action, stash, itemCount, item, x, y) 
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
            ON CONFLICT(op_id) DO NOTHING`
         )
         .bind(
@@ -19,7 +19,9 @@ export async function insertEvents(db: D1Database, events: Partial<StashEvent>[]
           event.action,
           event.stash,
           event.itemCount,
-          event.item
+          event.item,
+          event.x,
+          event.y
         )
     )
   );
@@ -106,7 +108,7 @@ export async function getTableData(
   const dataResult = await db
     .prepare(
       `
-      SELECT date, op_id, league, account, action, stash, itemCount, item
+      SELECT date, op_id, league, account, action, stash, itemCount, item, x, y
       FROM stash_events 
       ${whereClause}
       ORDER BY date DESC 
