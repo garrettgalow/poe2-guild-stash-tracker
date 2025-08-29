@@ -38,6 +38,8 @@ app.post('/api/upload', async (c) => {
       stash: string;
       itemCount: number;
       item: string;
+      x: number;
+      y: number;
     }
 
     const cleanedRecords = records.map((record, index) => {
@@ -58,7 +60,9 @@ app.post('/api/upload', async (c) => {
           account: String(record.Account).replace(/['"]/g, '').trim(),
           action: String(record.Action).replace(/['"]/g, '').trim().toLowerCase(),
           stash: String(record.Stash).replace(/['"]/g, '').trim(),
-          item: String(record.Item).replace(/['"]/g, '').trim()
+          item: String(record.Item).replace(/['"]/g, '').trim(),
+          x: parseInt(String(record.X), 10),
+          y: parseInt(String(record.Y), 10)
         };
       } catch (err) {
         console.error(`Error processing record ${index}:`, err, record);

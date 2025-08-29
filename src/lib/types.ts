@@ -10,6 +10,8 @@ export interface StashEvent {
   stash: string;
   itemCount: number;
   item: string;
+  x: number;
+  y: number;
 }
 
 export interface ChartData {
