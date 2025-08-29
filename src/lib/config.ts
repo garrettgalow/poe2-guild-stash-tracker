@@ -16,6 +16,8 @@ export const config = {
   // Values below should not need to be changed but can be overridden if needed
 
   leagueList: [
+    "Rise of the Abyssal",
+    "HC Rise of the Abyssal",
     "Dawn of the Hunt",
     "HC Dawn of the Hunt",
     "Standard",
