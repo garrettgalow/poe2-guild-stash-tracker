@@ -25,77 +25,6 @@ import { Skeleton } from "../../components/ui/skeleton"
 import { useUserRatios } from "../../hooks/use-user-ratios"
 import { useActivityData } from "../../hooks/use-activity-data"
 
-// Sample data for charts
-const activityData = [
-  { time: "00:00", added: 12, removed: 8 },
-  { time: "04:00", added: 18, removed: 11 },
-  { time: "08:00", added: 29, removed: 15 },
-  { time: "12:00", added: 42, removed: 22 },
-  { time: "16:00", added: 35, removed: 27 },
-  { time: "20:00", added: 25, removed: 14 },
-]
-
-const currencyData = [
-  { name: "Chaos Orb", amount: 245, change: 12 },
-  { name: "Exalted Orb", amount: 18, change: -3 },
-  { name: "Divine Orb", amount: 7, change: 2 },
-  { name: "Vaal Orb", amount: 89, change: -5 },
-  { name: "Regal Orb", amount: 56, change: 8 },
-]
-
-const weeklyData = [
-  { day: "Mon", items: 120 },
-  { day: "Tue", items: 145 },
-  { day: "Wed", items: 132 },
-  { day: "Thu", items: 167 },
-  { day: "Fri", items: 189 },
-  { day: "Sat", items: 212 },
-  { day: "Sun", items: 178 },
-]
-
-// Sample data for top users
-const topUsers = {
-  adders: [
-    { account: "ExileHunter", count: 342 },
-    { account: "MapMaster", count: 287 },
-    { account: "LootGoblin", count: 253 },
-    { account: "CurrencyKing", count: 201 },
-    { account: "StashManager", count: 187 },
-  ],
-  removers: [
-    { account: "RaidLeader", count: 412 },
-    { account: "GearSwapper", count: 376 },
-    { account: "BossHunter", count: 298 },
-    { account: "CraftMaster", count: 245 },
-    { account: "MapRunner", count: 221 },
-  ],
-  bestRatios: [
-    { account: "EfficientTrader", ratio: 2.4 },
-    { account: "ProfitMaker", ratio: 2.1 },
-    { account: "SmartStasher", ratio: 1.9 },
-    { account: "ResourceManager", ratio: 1.7 },
-    { account: "InventoryPro", ratio: 1.5 },
-  ],
-  worstRatios: [
-    { account: "ChaoticStasher", ratio: 0.3 },
-    { account: "HoarderExile", ratio: 0.4 },
-    { account: "DisorganizedOne", ratio: 0.5 },
-    { account: "RandomGrabber", ratio: 0.6 },
-    { account: "ImpulsiveTrader", ratio: 0.7 },
-  ],
-}
-
-// Sample data for popular items
-const popularItems = [
-  { item: "Chaos Orb", users: 87, count: 1245 },
-  { item: "Exalted Orb", users: 65, count: 342 },
-  { item: "Divine Orb", users: 54, count: 187 },
-  { item: "Mirror of Kalandra", users: 12, count: 14 },
-  { item: "Awakened Gem", users: 43, count: 98 },
-  { item: "Headhunter", users: 8, count: 11 },
-  { item: "Mageblood", users: 5, count: 7 },
-]
-
 export default function DashboardPage() {
   const [timeRange, setTimeRange] = useState("7d")
   const [timeSlice, setTimeSlice] = useState("day")
@@ -152,6 +81,7 @@ export default function DashboardPage() {
           <SelectContent>
             <SelectItem value="24h">Last 24 Hours</SelectItem>
             <SelectItem value="7d">Last 7 Days</SelectItem>
+            <SelectItem value="14d">Last 14 Days</SelectItem>
             <SelectItem value="30d">Last 30 Days</SelectItem>
             <SelectItem value="90d">Last 90 Days</SelectItem>
           </SelectContent>
@@ -466,9 +396,9 @@ export default function DashboardPage() {
       </div>
 
       <div className="mt-6">
-        <h1>Coming Soon!</h1>
+        <h1>Currency trackers coming soon!</h1>
       </div>
-
+      {/* Commented out charts section
       <div className="mt-6 grid gap-6 md:grid-cols-2">
         <Card>
           <CardHeader>
@@ -530,6 +460,7 @@ export default function DashboardPage() {
           </CardContent>
         </Card>
       </div>
+      */}
     </>
   )
 }

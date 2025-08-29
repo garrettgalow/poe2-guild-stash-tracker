@@ -52,6 +52,7 @@ const dateRangeOptions = [
   { value: "all", label: "All Time" },
   { value: "24h", label: "Last 24 Hours" },
   { value: "7d", label: "Last 7 Days" },
+  { value: "14d", label: "Last 14 Days" },
   { value: "30d", label: "Last 30 Days" }
 ]
 

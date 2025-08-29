@@ -164,6 +164,9 @@ export async function getTopUsers(
       case '7d':
         timeFilter = "WHERE date > datetime('now', '-7 days')";
         break;
+      case '14d':
+        timeFilter = "WHERE date > datetime('now', '-14 days')";
+        break;
       case '30d':
         timeFilter = "WHERE date > datetime('now', '-30 days')";
         break;
@@ -254,6 +257,9 @@ export async function getUserRatios(
       case '7d':
         timeFilter = "WHERE date > datetime('now', '-7 days')";
         break;
+      case '14d':
+        timeFilter = "WHERE date > datetime('now', '-14 days')";
+        break;
       case '30d':
         timeFilter = "WHERE date > datetime('now', '-30 days')";
         break;
@@ -336,6 +342,9 @@ export async function getActivityByTimeSegment(
       break;
     case '7d':
       timeFilter = "WHERE date > datetime('now', '-7 days')";
+      break;
+    case '14d':
+      timeFilter = "WHERE date > datetime('now', '-14 days')";
       break;
     case '30d':
       timeFilter = "WHERE date > datetime('now', '-30 days')";
@@ -512,6 +521,8 @@ function getDateFilter(range: string): string {
       return `AND date >= datetime('now', '-1 day')`;
     case '7d':
       return `AND date >= datetime('now', '-7 days')`;
+    case '14d':
+      return `AND date >= datetime('now', '-14 days')`;
     case '30d':
       return `AND date >= datetime('now', '-30 days')`;
     default:
