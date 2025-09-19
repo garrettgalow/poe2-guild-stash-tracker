@@ -7,6 +7,14 @@ export const config = {
     "snowpeach#7736"
   ],
 
+  communityAccounts: [
+    "Bothorn#8692",
+    "Chokin#2008",
+    "azheman#0749",
+    "jvanis#2992",
+    "untergraben#6255"
+  ],
+
   currencyTabs: [ // Set to your guild's currency tabs
     "iCurrency",
     "mCurrency",

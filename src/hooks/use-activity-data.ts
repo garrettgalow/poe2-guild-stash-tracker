@@ -8,7 +8,7 @@ interface ActivityData {
   modified: number;
 }
 
-export function useActivityData(timeRange: string, timeSlice: string, excludeSystemAccounts: boolean) {
+export function useActivityData(timeRange: string, timeSlice: string, excludeSystemAccounts: boolean, excludeCommunityAccounts: boolean) {
   const [data, setData] = useState<ActivityData[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -19,7 +19,7 @@ export function useActivityData(timeRange: string, timeSlice: string, excludeSys
       try {
         setLoading(true);
         const response = await fetch(
-          `/api/charts/activity?timeRange=${timeRange}&timeSlice=${timeSlice}&excludeSystemAccounts=${excludeSystemAccounts}&league=${encodeURIComponent(selectedLeague)}`
+          `/api/charts/activity?timeRange=${timeRange}&timeSlice=${timeSlice}&excludeSystemAccounts=${excludeSystemAccounts}&excludeCommunityAccounts=${excludeCommunityAccounts}&league=${encodeURIComponent(selectedLeague)}`
         );
         
         if (!response.ok) {
@@ -41,7 +41,7 @@ export function useActivityData(timeRange: string, timeSlice: string, excludeSys
     };
     
     fetchData();
-  }, [timeRange, timeSlice, excludeSystemAccounts, selectedLeague]);
+  }, [timeRange, timeSlice, excludeSystemAccounts, excludeCommunityAccounts, selectedLeague]);
 
   return { data, loading, error };
 } 

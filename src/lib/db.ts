@@ -151,6 +151,7 @@ export async function getTopUsers(
   action: 'added' | 'removed' | 'modified',
   timeRange?: string,
   excludeSystemUsers?: boolean,
+  excludeCommunityUsers?: boolean,
   league?: string
 ) {
   let timeFilter = '';
@@ -178,8 +179,15 @@ export async function getTopUsers(
     }
   }
 
+  const accountFilters = [];
   if (excludeSystemUsers) {
-    accountFilter = "account not in (\"" + config.systemAccounts.join('","') + "\")";
+    accountFilters.push("account not in (\"" + config.systemAccounts.join('","') + "\")");
+  }
+  if (excludeCommunityUsers) {
+    accountFilters.push("account not in (\"" + config.communityAccounts.join('","') + "\")");
+  }
+  if (accountFilters.length > 0) {
+    accountFilter = accountFilters.join(" AND ");
   }
 
   if (league) {
@@ -245,6 +253,7 @@ export async function getUserRatios(
   limit?: number,
   order?: string,
   excludeSystemUsers?: boolean,
+  excludeCommunityUsers?: boolean,
   league?: string
 ) {
   let timeFilter = '';
@@ -271,8 +280,15 @@ export async function getUserRatios(
     }
   }
 
+  const accountFilters = [];
   if (excludeSystemUsers) {
-    accountFilter = "account not in (\"" + config.systemAccounts.join('","') + "\")";
+    accountFilters.push("account not in (\"" + config.systemAccounts.join('","') + "\")");
+  }
+  if (excludeCommunityUsers) {
+    accountFilters.push("account not in (\"" + config.communityAccounts.join('","') + "\")");
+  }
+  if (accountFilters.length > 0) {
+    accountFilter = accountFilters.join(" AND ");
   }
 
   if (league) {
@@ -330,6 +346,7 @@ export async function getActivityByTimeSegment(
   timeRange: string,
   timeSlice: string,
   excludeSystemUsers: boolean,
+  excludeCommunityUsers: boolean,
   league?: string
 ) {
   let timeFilter = '';
@@ -356,8 +373,15 @@ export async function getActivityByTimeSegment(
       break;
   }
 
+  const accountFilters = [];
   if (excludeSystemUsers) {
-    accountFilter = "account not in (\"" + config.systemAccounts.join('","') + "\")";
+    accountFilters.push("account not in (\"" + config.systemAccounts.join('","') + "\")");
+  }
+  if (excludeCommunityUsers) {
+    accountFilters.push("account not in (\"" + config.communityAccounts.join('","') + "\")");
+  }
+  if (accountFilters.length > 0) {
+    accountFilter = accountFilters.join(" AND ");
   }
 
   if (league) {

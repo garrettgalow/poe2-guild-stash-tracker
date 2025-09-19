@@ -172,6 +172,7 @@ app.get('/api/charts/top-users', async (c) => {
   const action = c.req.query('action') as 'added' | 'removed' | 'modified' || 'added';
   const timeRange = c.req.query('timeRange') || '7d';
   const excludeSystemAccounts = c.req.query('excludeSystemAccounts') === 'true';
+  const excludeCommunityAccounts = c.req.query('excludeCommunityAccounts') === 'true';
   const league = c.req.query('league');
   
   // Validate action parameter
@@ -185,6 +186,7 @@ app.get('/api/charts/top-users', async (c) => {
       action, 
       timeRange as string, 
       excludeSystemAccounts as boolean,
+      excludeCommunityAccounts as boolean,
       league as string
     );
     
@@ -262,6 +264,7 @@ app.get('/api/charts/user-ratios', async (c) => {
   const limit = Number(c.req.query('limit')) || 10;
   const order = c.req.query('order') || 'desc';
   const excludeSystemAccounts = c.req.query('excludeSystemAccounts') === 'true';
+  const excludeCommunityAccounts = c.req.query('excludeCommunityAccounts') === 'true';
   const league = c.req.query('league');
 
   try {
@@ -271,6 +274,7 @@ app.get('/api/charts/user-ratios', async (c) => {
       limit, 
       order as string, 
       excludeSystemAccounts as boolean,
+      excludeCommunityAccounts as boolean,
       league as string
     );
 
@@ -297,6 +301,7 @@ app.get('/api/charts/activity', async (c) => {
   const timeRange = c.req.query('timeRange') || '7d';
   const timeSlice = c.req.query('timeSlice') || 'day';
   const excludeSystemAccounts = c.req.query('excludeSystemAccounts') === 'true';
+  const excludeCommunityAccounts = c.req.query('excludeCommunityAccounts') === 'true';
   const league = c.req.query('league');
   
   try {
@@ -305,6 +310,7 @@ app.get('/api/charts/activity', async (c) => {
       timeRange as string, 
       timeSlice as string, 
       excludeSystemAccounts as boolean,
+      excludeCommunityAccounts as boolean,
       league as string
     );
     

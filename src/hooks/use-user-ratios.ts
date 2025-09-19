@@ -8,7 +8,7 @@ interface UserRatio {
   ratio: number;
 }
 
-export function useUserRatios(timeRange: string, limit: number, order: string, excludeSystemAccounts: boolean) {
+export function useUserRatios(timeRange: string, limit: number, order: string, excludeSystemAccounts: boolean, excludeCommunityAccounts: boolean) {
   const [data, setData] = useState<UserRatio[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -19,7 +19,7 @@ export function useUserRatios(timeRange: string, limit: number, order: string, e
       try {
         setLoading(true);
         const response = await fetch(
-          `/api/charts/user-ratios?timeRange=${timeRange}&limit=${limit}&order=${order}&excludeSystemAccounts=${excludeSystemAccounts}&league=${encodeURIComponent(selectedLeague)}`
+          `/api/charts/user-ratios?timeRange=${timeRange}&limit=${limit}&order=${order}&excludeSystemAccounts=${excludeSystemAccounts}&excludeCommunityAccounts=${excludeCommunityAccounts}&league=${encodeURIComponent(selectedLeague)}`
         );
         
         if (!response.ok) {
@@ -41,7 +41,7 @@ export function useUserRatios(timeRange: string, limit: number, order: string, e
     };
     
     fetchData();
-  }, [timeRange, limit, order, excludeSystemAccounts, selectedLeague]);
+  }, [timeRange, limit, order, excludeSystemAccounts, excludeCommunityAccounts, selectedLeague]);
 
   return { data, loading, error };
 } 

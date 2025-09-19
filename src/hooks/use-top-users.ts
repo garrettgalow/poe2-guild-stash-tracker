@@ -6,7 +6,7 @@ interface TopUser {
   count: number;
 }
 
-export function useTopUsers(action: 'added' | 'removed' | 'modified', timeRange: string, excludeSystemAccounts: boolean) {
+export function useTopUsers(action: 'added' | 'removed' | 'modified', timeRange: string, excludeSystemAccounts: boolean, excludeCommunityAccounts: boolean) {
   const [data, setData] = useState<TopUser[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -17,7 +17,7 @@ export function useTopUsers(action: 'added' | 'removed' | 'modified', timeRange:
       try {
         setLoading(true);
         const response = await fetch(
-          `/api/charts/top-users?action=${action}&timeRange=${timeRange}&excludeSystemAccounts=${excludeSystemAccounts}&league=${encodeURIComponent(selectedLeague)}`
+          `/api/charts/top-users?action=${action}&timeRange=${timeRange}&excludeSystemAccounts=${excludeSystemAccounts}&excludeCommunityAccounts=${excludeCommunityAccounts}&league=${encodeURIComponent(selectedLeague)}`
         );
         
         if (!response.ok) {
@@ -39,7 +39,7 @@ export function useTopUsers(action: 'added' | 'removed' | 'modified', timeRange:
     };
     
     fetchData();
-  }, [action, timeRange, excludeSystemAccounts, selectedLeague]);
+  }, [action, timeRange, excludeSystemAccounts, excludeCommunityAccounts, selectedLeague]);
 
   return { data, loading, error };
 } 

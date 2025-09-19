@@ -29,6 +29,7 @@ export default function DashboardPage() {
   const [timeRange, setTimeRange] = useState("7d")
   const [timeSlice, setTimeSlice] = useState("day")
   const [excludeSystemAccounts, setExcludeSystemAccounts] = useState(true)
+  const [excludeCommunityAccounts, setExcludeCommunityAccounts] = useState(false)
   const navigate = useNavigate();
   
   // Fetch data for all cards
@@ -36,25 +37,25 @@ export default function DashboardPage() {
     data: topAddersData, 
     loading: topAddersLoading, 
     error: topAddersError 
-  } = useTopUsers("added", timeRange, excludeSystemAccounts)
+  } = useTopUsers("added", timeRange, excludeSystemAccounts, excludeCommunityAccounts)
   
   const { 
     data: topRemoversData, 
     loading: topRemoversLoading, 
     error: topRemoversError 
-  } = useTopUsers("removed", timeRange, excludeSystemAccounts)
+  } = useTopUsers("removed", timeRange, excludeSystemAccounts, excludeCommunityAccounts)
   
   const {
     data: userRatiosDataDesc,
     loading: userRatiosLoadingDesc,
     error: userRatiosErrorDesc
-  } = useUserRatios(timeRange, 10, 'desc', excludeSystemAccounts)
+  } = useUserRatios(timeRange, 10, 'desc', excludeSystemAccounts, excludeCommunityAccounts)
   
   const {
     data: userRatiosDataAsc,
     loading: userRatiosLoadingAsc,
     error: userRatiosErrorAsc
-  } = useUserRatios(timeRange, 10, 'asc', excludeSystemAccounts)
+  } = useUserRatios(timeRange, 10, 'asc', excludeSystemAccounts, excludeCommunityAccounts)
 
   // Derived data for best and worst ratios
   // const bestRatios = userRatiosData ? [...userRatiosData].sort((a, b) => b.ratio - a.ratio) : []
@@ -65,7 +66,7 @@ export default function DashboardPage() {
     data: activityData,
     loading: activityLoading,
     error: activityError
-  } = useActivityData(timeRange, timeSlice, excludeSystemAccounts)
+  } = useActivityData(timeRange, timeSlice, excludeSystemAccounts, excludeCommunityAccounts)
 
   const handleAccountClick = (account: string) => {
     navigate(`/search?account=${encodeURIComponent(account)}`);
@@ -104,6 +105,14 @@ export default function DashboardPage() {
             />
             <Label htmlFor="exclude-system" className="text-sm">
               Exclude Officers
+            </Label>
+        <Checkbox 
+              id="exclude-community" 
+              checked={excludeCommunityAccounts} 
+              onCheckedChange={(checked) => setExcludeCommunityAccounts(checked as boolean)}
+            />
+            <Label htmlFor="exclude-community" className="text-sm">
+              Exclude Community Team
             </Label>
       </div>
 
