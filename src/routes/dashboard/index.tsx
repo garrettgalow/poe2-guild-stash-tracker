@@ -29,7 +29,7 @@ export default function DashboardPage() {
   const [timeRange, setTimeRange] = useState("7d")
   const [timeSlice, setTimeSlice] = useState("day")
   const [excludeSystemAccounts, setExcludeSystemAccounts] = useState(true)
-  const [excludeCommunityAccounts, setExcludeCommunityAccounts] = useState(false)
+  const [excludeCommunityAccounts, setExcludeCommunityAccounts] = useState(true)
   const navigate = useNavigate();
   
   // Fetch data for all cards
