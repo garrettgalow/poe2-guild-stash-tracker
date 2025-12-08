@@ -3,16 +3,16 @@ export const config = {
   // Accounts to filter out in dashboard
   systemAccounts: [ // Set to your guild's officers
     "xxDEITYxx#3520",
-    "Yukkuri#6816",
-    "snowpeach#7736"
+    "snowpeach#7736",
+    "azheman#0749",
   ],
 
   communityAccounts: [
-    "Bothorn#8692",
-    "Chokin#2008",
-    "azheman#0749",
+    "chokin#2008",
+    "bothorn#8692",
     "jvanis#2992",
-    "untergraben#6255"
+    "DavisWorks#1129",
+    "ivebeenshot4206#4263",
   ],
 
   currencyTabs: [ // Set to your guild's currency tabs
@@ -24,10 +24,10 @@ export const config = {
   // Values below should not need to be changed but can be overridden if needed
 
   leagueList: [
+    "Fate of the Vaal",
+    "HC Fate of the Vaal",
     "Rise of the Abyssal",
     "HC Rise of the Abyssal",
-    "Dawn of the Hunt",
-    "HC Dawn of the Hunt",
     "Standard",
     "Hardcore"    
   ],
