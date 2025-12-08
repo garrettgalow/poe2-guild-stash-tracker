@@ -8,7 +8,7 @@ export const config = {
   ],
 
   communityAccounts: [
-    "chokin#2008",
+    "Chokin#2008",
     "bothorn#8692",
     "jvanis#2992",
     "DavisWorks#1129",
